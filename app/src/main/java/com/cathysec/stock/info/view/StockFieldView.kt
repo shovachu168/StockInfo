@@ -6,6 +6,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.LinearLayout
+import androidx.annotation.ColorInt
 import androidx.core.content.withStyledAttributes
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.databinding.ViewStockFieldBinding
@@ -38,6 +39,10 @@ class StockFieldView @JvmOverloads constructor(
                 setValueMaxTextSize(getDimensionPixelSize(R.styleable.StockFieldView_valueMaxTextSize, 0))
             }
         }
+    }
+
+    fun setValueColor(@ColorInt color: Int) {
+        binding.tvValue.setTextColor(color)
     }
 
     private fun setValueMaxTextSize(maxTextSizePx: Int) {

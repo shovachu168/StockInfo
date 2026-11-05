@@ -2,6 +2,7 @@ package com.cathysec.stock.info.viewmodel
 
 import app.cash.turbine.test
 import com.cathysec.stock.info.data.StockRepository
+import com.cathysec.stock.info.model.PriceTrend
 import com.cathysec.stock.info.model.Stock
 import com.cathysec.stock.info.testing.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
@@ -51,6 +52,8 @@ class StockListViewModelTest {
                         transaction = "508,399",
                         tradeVolume = "53,879,371",
                         tradeValue = "122,293,100,290",
+                        closingPriceTrend = PriceTrend.DOWN,
+                        changeTrend = PriceTrend.DOWN,
                     ),
                 ),
                 success.stocks,
@@ -145,6 +148,8 @@ class StockListViewModelTest {
             assertEquals("-", item.closingPrice)
             assertEquals("-", item.change)
             assertEquals("-", item.tradeValue)
+            assertEquals(PriceTrend.FLAT, item.closingPriceTrend)
+            assertEquals(PriceTrend.FLAT, item.changeTrend)
         }
     }
 

@@ -3,4 +3,8 @@
     <color name="brand_primary">#FF1E6B52</color>
     <color name="launcher_background">#FF1E6B52</color>
     <color name="launcher_foreground">#FFFFFFFF</color>
+
+    <!-- Taiwan stock market convention: up is red, down is green -->
+    <color name="stock_up">#FFD32F2F</color>
+    <color name="stock_down">#FF2E7D32</color>
 </resources>

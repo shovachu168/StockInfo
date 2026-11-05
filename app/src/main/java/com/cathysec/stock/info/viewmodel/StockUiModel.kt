@@ -1,6 +1,8 @@
 package com.cathysec.stock.info.viewmodel
 
+import com.cathysec.stock.info.model.PriceTrend
 import com.cathysec.stock.info.model.Stock
+import com.cathysec.stock.info.util.PriceTrendUtil
 import com.cathysec.stock.info.util.StockFormatUtil
 
 /**
@@ -18,6 +20,10 @@ data class StockUiModel(
     val transaction: String,
     val tradeVolume: String,
     val tradeValue: String,
+    /** Closing price compared with the monthly average price. */
+    val closingPriceTrend: PriceTrend,
+    /** Sign of the price change. */
+    val changeTrend: PriceTrend,
 )
 
 fun Stock.toUiModel() = StockUiModel(
@@ -32,4 +38,6 @@ fun Stock.toUiModel() = StockUiModel(
     transaction = StockFormatUtil.formatCount(transaction),
     tradeVolume = StockFormatUtil.formatCount(tradeVolume),
     tradeValue = StockFormatUtil.formatCount(tradeValue),
+    closingPriceTrend = PriceTrendUtil.closingPriceTrend(closingPrice, monthlyAveragePrice),
+    changeTrend = PriceTrendUtil.changeTrend(change),
 )
