@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- StockFieldView content: label on the start side, value on the end side (value auto-sizes when too long) -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.LinearLayout"
+    tools:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/tv_label"
+        style="@style/StockCard.Label"
+        tools:text="開盤價" />
+
+    <TextView
+        android:id="@+id/tv_value"
+        style="@style/StockCard.FieldValue"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/stock_card_inline_spacing"
+        android:layout_weight="1"
+        android:autoSizeMaxTextSize="@dimen/stock_field_value_text_max"
+        android:autoSizeMinTextSize="@dimen/stock_field_value_text_min"
+        android:autoSizeTextType="uniform"
+        android:gravity="end|center_vertical"
+        tools:text="2,320.00" />
+
+</merge>

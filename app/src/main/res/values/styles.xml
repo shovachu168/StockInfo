@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stock card: small label -->
+    <style name="StockCard.Label" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Stock card: price field (StockFieldView) -->
+    <style name="StockCard.PriceField" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">@dimen/stock_price_field_height</item>
+        <item name="valueMaxTextSize">@dimen/stock_price_value_text_max</item>
+    </style>
+
+    <!-- StockFieldView value -->
+    <style name="StockCard.FieldValue" parent="">
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <!-- Stock card: trade info label -->
+    <style name="StockCard.TradeLabel" parent="StockCard.Label">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+    </style>
+
+    <!-- Stock card: trade info value (shrinks when the number is too long) -->
+    <style name="StockCard.TradeValue" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">@dimen/stock_trade_value_height</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMaxTextSize">@dimen/stock_trade_value_text_max</item>
+        <item name="android:autoSizeMinTextSize">@dimen/stock_trade_value_text_min</item>
+    </style>
+</resources>

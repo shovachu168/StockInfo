@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StockFieldView">
+        <!-- Label text shown on the start side -->
+        <attr name="label" format="string" />
+        <!-- Maximum text size of the auto-sized value on the end side -->
+        <attr name="valueMaxTextSize" format="dimension" />
+    </declare-styleable>
+</resources>

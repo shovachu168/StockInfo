@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Stock card (follows the assignment mockup; full width, fixed height)
+    +===============================================+
+    | 2330                                          |
+    | TSMC                                          |
+    | Open        2,320.00 | Close         2,260.00 |
+    | High        2,320.00 | Low           2,235.00 |
+    | Change        -35.00 | Monthly avg   2,295.00 |
+    | ............................................. |
+    | Transactions    Volume           Value        |
+    | 508,399         53,879,371       122,293,...  |
+    +===============================================+
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Material3.CardView.Filled"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/stock_card_height"
+    android:layout_marginHorizontal="@dimen/stock_card_margin_horizontal"
+    android:layout_marginVertical="@dimen/stock_card_margin_vertical"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardCornerRadius="@dimen/stock_card_corner_radius">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/stock_card_padding">
+
+        <!-- Header: code and name -->
+        <TextView
+            android:id="@+id/tv_code"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="2330" />
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_code"
+            tools:text="台積電" />
+
+        <!-- Prices: two columns -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_half"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
+
+        <com.cathysec.stock.info.ui.widget.StockFieldView
+            android:id="@+id/field_opening_price"
+            style="@style/StockCard.PriceField"
+            android:layout_marginTop="@dimen/stock_card_section_spacing"
+            android:layout_marginEnd="@dimen/stock_card_column_gap"
+            app:label="@string/label_opening_price"
+            app:layout_constraintEnd_toStartOf="@id/guideline_half"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_name" />
+
+        <com.cathysec.stock.info.ui.widget.StockFieldView
+            android:id="@+id/field_highest_price"
+            style="@style/StockCard.PriceField"
+            android:layout_marginEnd="@dimen/stock_card_column_gap"
+            app:label="@string/label_highest_price"
+            app:layout_constraintEnd_toStartOf="@id/guideline_half"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/field_opening_price" />
+
+        <com.cathysec.stock.info.ui.widget.StockFieldView
+            android:id="@+id/field_change"
+            style="@style/StockCard.PriceField"
+            android:layout_marginEnd="@dimen/stock_card_column_gap"
+            app:label="@string/label_change"
+            app:layout_constraintEnd_toStartOf="@id/guideline_half"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/field_highest_price" />
+
+        <com.cathysec.stock.info.ui.widget.StockFieldView
+            android:id="@+id/field_closing_price"
+            style="@style/StockCard.PriceField"
+            android:layout_marginStart="@dimen/stock_card_column_gap"
+            app:label="@string/label_closing_price"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guideline_half"
+            app:layout_constraintTop_toTopOf="@id/field_opening_price" />
+
+        <com.cathysec.stock.info.ui.widget.StockFieldView
+            android:id="@+id/field_lowest_price"
+            style="@style/StockCard.PriceField"
+            android:layout_marginStart="@dimen/stock_card_column_gap"
+            app:label="@string/label_lowest_price"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guideline_half"
+            app:layout_constraintTop_toBottomOf="@id/field_closing_price" />
+
+        <com.cathysec.stock.info.ui.widget.StockFieldView
+            android:id="@+id/field_monthly_average_price"
+            style="@style/StockCard.PriceField"
+            android:layout_marginStart="@dimen/stock_card_column_gap"
+            app:label="@string/label_monthly_average_price"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guideline_half"
+            app:layout_constraintTop_toBottomOf="@id/field_lowest_price" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/divider"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/stock_card_divider_spacing"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/field_change" />
+
+        <!-- Trade info: three columns, label above value -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_one_third"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.3333" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_two_thirds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.6667" />
+
+        <TextView
+            android:id="@+id/label_transaction"
+            style="@style/StockCard.TradeLabel"
+            android:layout_marginTop="@dimen/stock_card_divider_spacing"
+            android:text="@string/label_transaction"
+            app:layout_constraintEnd_toStartOf="@id/guideline_one_third"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider" />
+
+        <TextView
+            android:id="@+id/tv_transaction"
+            style="@style/StockCard.TradeValue"
+            app:layout_constraintEnd_toStartOf="@id/guideline_one_third"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/label_transaction"
+            tools:text="508,399" />
+
+        <TextView
+            android:id="@+id/label_trade_volume"
+            style="@style/StockCard.TradeLabel"
+            android:text="@string/label_trade_volume"
+            app:layout_constraintEnd_toStartOf="@id/guideline_two_thirds"
+            app:layout_constraintStart_toEndOf="@id/guideline_one_third"
+            app:layout_constraintTop_toTopOf="@id/label_transaction" />
+
+        <TextView
+            android:id="@+id/tv_trade_volume"
+            style="@style/StockCard.TradeValue"
+            app:layout_constraintEnd_toStartOf="@id/guideline_two_thirds"
+            app:layout_constraintStart_toEndOf="@id/guideline_one_third"
+            app:layout_constraintTop_toBottomOf="@id/label_trade_volume"
+            tools:text="53,879,371" />
+
+        <TextView
+            android:id="@+id/label_trade_value"
+            style="@style/StockCard.TradeLabel"
+            android:text="@string/label_trade_value"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guideline_two_thirds"
+            app:layout_constraintTop_toTopOf="@id/label_transaction" />
+
+        <TextView
+            android:id="@+id/tv_trade_value"
+            style="@style/StockCard.TradeValue"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guideline_two_thirds"
+            app:layout_constraintTop_toBottomOf="@id/label_trade_value"
+            tools:text="122,293,100,290" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

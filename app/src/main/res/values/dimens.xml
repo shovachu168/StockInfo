@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All dimensions are multiples of 4 (Material Design 4dp grid) -->
+<resources>
+    <!-- Stock list: list padding + card margin = 16dp screen edge, 8dp between cards -->
+    <dimen name="stock_list_padding">12dp</dimen>
+
+    <!-- Stock card -->
+    <dimen name="stock_card_height">224dp</dimen>
+    <dimen name="stock_card_margin_horizontal">4dp</dimen>
+    <dimen name="stock_card_margin_vertical">4dp</dimen>
+    <dimen name="stock_card_corner_radius">16dp</dimen>
+    <dimen name="stock_card_padding">16dp</dimen>
+    <dimen name="stock_card_section_spacing">8dp</dimen>
+    <dimen name="stock_card_divider_spacing">8dp</dimen>
+    <dimen name="stock_card_column_gap">12dp</dimen>
+    <dimen name="stock_card_inline_spacing">8dp</dimen>
+
+    <!-- Price fields (StockFieldView) -->
+    <dimen name="stock_price_field_height">28dp</dimen>
+    <dimen name="stock_price_value_text_max">16sp</dimen>
+
+    <!-- Default auto-size range for StockFieldView values -->
+    <dimen name="stock_field_value_text_max">12sp</dimen>
+    <dimen name="stock_field_value_text_min">8sp</dimen>
+
+    <!-- Trade info values (auto-size) -->
+    <dimen name="stock_trade_value_height">20dp</dimen>
+    <dimen name="stock_trade_value_text_max">12sp</dimen>
+    <dimen name="stock_trade_value_text_min">8sp</dimen>
+</resources>
