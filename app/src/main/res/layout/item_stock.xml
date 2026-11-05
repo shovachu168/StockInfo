@@ -63,7 +63,7 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.5" />
 
-        <com.cathysec.stock.info.ui.widget.StockFieldView
+        <com.cathysec.stock.info.view.StockFieldView
             android:id="@+id/field_opening_price"
             style="@style/StockCard.PriceField"
             android:layout_marginTop="@dimen/stock_card_section_spacing"
@@ -73,7 +73,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_name" />
 
-        <com.cathysec.stock.info.ui.widget.StockFieldView
+        <com.cathysec.stock.info.view.StockFieldView
             android:id="@+id/field_highest_price"
             style="@style/StockCard.PriceField"
             android:layout_marginEnd="@dimen/stock_card_column_gap"
@@ -82,7 +82,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/field_opening_price" />
 
-        <com.cathysec.stock.info.ui.widget.StockFieldView
+        <com.cathysec.stock.info.view.StockFieldView
             android:id="@+id/field_change"
             style="@style/StockCard.PriceField"
             android:layout_marginEnd="@dimen/stock_card_column_gap"
@@ -91,7 +91,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/field_highest_price" />
 
-        <com.cathysec.stock.info.ui.widget.StockFieldView
+        <com.cathysec.stock.info.view.StockFieldView
             android:id="@+id/field_closing_price"
             style="@style/StockCard.PriceField"
             android:layout_marginStart="@dimen/stock_card_column_gap"
@@ -100,7 +100,7 @@
             app:layout_constraintStart_toEndOf="@id/guideline_half"
             app:layout_constraintTop_toTopOf="@id/field_opening_price" />
 
-        <com.cathysec.stock.info.ui.widget.StockFieldView
+        <com.cathysec.stock.info.view.StockFieldView
             android:id="@+id/field_lowest_price"
             style="@style/StockCard.PriceField"
             android:layout_marginStart="@dimen/stock_card_column_gap"
@@ -109,7 +109,7 @@
             app:layout_constraintStart_toEndOf="@id/guideline_half"
             app:layout_constraintTop_toBottomOf="@id/field_closing_price" />
 
-        <com.cathysec.stock.info.ui.widget.StockFieldView
+        <com.cathysec.stock.info.view.StockFieldView
             android:id="@+id/field_monthly_average_price"
             style="@style/StockCard.PriceField"
             android:layout_marginStart="@dimen/stock_card_column_gap"

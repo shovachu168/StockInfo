@@ -1,4 +1,4 @@
-package com.cathysec.stock.info.ui.stock
+package com.cathysec.stock.info.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cathysec.stock.info.databinding.ItemStockBinding
+import com.cathysec.stock.info.viewmodel.StockUiModel
 
 class StockAdapter : ListAdapter<StockUiModel, StockAdapter.StockViewHolder>(StockDiffCallback) {
 

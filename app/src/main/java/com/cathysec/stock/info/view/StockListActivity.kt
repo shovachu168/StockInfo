@@ -1,4 +1,4 @@
-package com.cathysec.stock.info.ui.stock
+package com.cathysec.stock.info.view
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
@@ -6,11 +6,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.cathysec.stock.info.databinding.ActivityStockListBinding
+import com.cathysec.stock.info.viewmodel.StockListUiState
+import com.cathysec.stock.info.viewmodel.StockListViewModel
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class StockListActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStockListBinding
+    private val viewModel: StockListViewModel by viewModel()
     private val stockAdapter = StockAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +29,7 @@ class StockListActivity : AppCompatActivity() {
 
         setupWindowInsets()
         setupStockList()
+        observeUiState()
     }
 
     private fun setupWindowInsets() {
@@ -41,6 +50,21 @@ class StockListActivity : AppCompatActivity() {
 
     private fun setupStockList() {
         binding.rvStocks.adapter = stockAdapter
-        stockAdapter.submitList(StockSampleData.stocks)
+    }
+
+    private fun observeUiState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect(::render)
+            }
+        }
+    }
+
+    private fun render(state: StockListUiState) {
+        when (state) {
+            is StockListUiState.Success -> stockAdapter.submitList(state.stocks)
+            // Loading and error views will be added when the API is integrated.
+            StockListUiState.Loading, StockListUiState.Error -> Unit
+        }
     }
 }

@@ -11,7 +11,7 @@
         android:theme="@style/Theme.StockInfo">
 
         <activity
-            android:name=".ui.stock.StockListActivity"
+            android:name=".view.StockListActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

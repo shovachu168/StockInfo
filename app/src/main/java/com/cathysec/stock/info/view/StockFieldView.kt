@@ -1,4 +1,4 @@
-package com.cathysec.stock.info.ui.widget
+package com.cathysec.stock.info.view
 
 import android.content.Context
 import android.util.AttributeSet
