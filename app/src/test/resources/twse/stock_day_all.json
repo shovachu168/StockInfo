@@ -1,0 +1,41 @@
+[
+  {
+    "Date": "1151104",
+    "Code": "00625K",
+    "Name": "富邦上証+R",
+    "TradeVolume": "",
+    "TradeValue": "",
+    "OpeningPrice": "",
+    "HighestPrice": "",
+    "LowestPrice": "",
+    "ClosingPrice": "",
+    "Change": "0.0000",
+    "Transaction": ""
+  },
+  {
+    "Date": "1151104",
+    "Code": "1101",
+    "Name": "台泥",
+    "TradeVolume": "57045650",
+    "TradeValue": "1553237473",
+    "OpeningPrice": "27.80",
+    "HighestPrice": "28.00",
+    "LowestPrice": "26.80",
+    "ClosingPrice": "27.25",
+    "Change": "-0.4500",
+    "Transaction": "16560"
+  },
+  {
+    "Date": "1151104",
+    "Code": "2330",
+    "Name": "台積電",
+    "TradeVolume": "53879371",
+    "TradeValue": "122293100290",
+    "OpeningPrice": "2320.00",
+    "HighestPrice": "2320.00",
+    "LowestPrice": "2235.00",
+    "ClosingPrice": "2260.00",
+    "Change": "-35.0000",
+    "Transaction": "508399"
+  }
+]

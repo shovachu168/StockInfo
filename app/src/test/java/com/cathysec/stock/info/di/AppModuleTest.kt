@@ -15,4 +15,9 @@ class AppModuleTest {
     fun `appModule declares all dependencies`() {
         appModule.verify()
     }
+
+    @Test
+    fun `networkModule declares all dependencies`() {
+        networkModule.verify()
+    }
 }

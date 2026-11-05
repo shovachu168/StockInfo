@@ -1,0 +1,16 @@
+[
+  {
+    "Date": "1151104",
+    "Code": "1101",
+    "Name": "台泥",
+    "ClosingPrice": "27.25",
+    "MonthlyAveragePrice": "27.68"
+  },
+  {
+    "Date": "1151104",
+    "Code": "2330",
+    "Name": "台積電",
+    "ClosingPrice": "2260.00",
+    "MonthlyAveragePrice": "2295.00"
+  }
+]
