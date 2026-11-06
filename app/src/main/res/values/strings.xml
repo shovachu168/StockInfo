@@ -3,6 +3,11 @@
     <string name="stock_list_title">上市個股日成交資訊</string>
     <string name="action_sort">排序</string>
 
+    <!-- 排序 -->
+    <string name="sort_title">排序方式</string>
+    <string name="sort_code_descending">依股票代號降序</string>
+    <string name="sort_code_ascending">依股票代號升序</string>
+
     <!-- 載入狀態 -->
     <string name="action_retry">重試</string>
     <string name="error_no_connection">無法連線，請檢查網路後再試一次</string>

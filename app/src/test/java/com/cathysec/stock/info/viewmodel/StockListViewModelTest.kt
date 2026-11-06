@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.cathysec.stock.info.data.StockRepository
 import com.cathysec.stock.info.model.LoadError
 import com.cathysec.stock.info.model.PriceTrend
+import com.cathysec.stock.info.model.SortOrder
 import com.cathysec.stock.info.model.Stock
 import com.cathysec.stock.info.testing.MainDispatcherRule
 import kotlinx.coroutines.CompletableDeferred
@@ -132,7 +133,7 @@ class StockListViewModelTest {
             // The old list is still there while refreshing.
             assertEquals(StockListUiState.Success(old.stocks, isRefreshing = true), awaitItem())
             val refreshed = awaitItem() as StockListUiState.Success
-            assertEquals(listOf("2317", "2454"), refreshed.stocks.map { it.code })
+            assertEquals(listOf("2454", "2317"), refreshed.stocks.map { it.code })
             assertEquals(false, refreshed.isRefreshing)
         }
     }
@@ -218,6 +219,137 @@ class StockListViewModelTest {
         assertEquals(StockListUiState.Success(emptyList()), viewModel.uiState.value)
     }
 
+    // Sorting
+
+    private fun codesOf(state: StockListUiState) = (state as StockListUiState.Success).stocks.map { it.code }
+
+    private fun stocksWithCodes(vararg codes: String) = codes.map { stock.copy(code = it) }
+
+    @Test
+    fun `list is sorted by code descending by default`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(stocksWithCodes("1101", "2330", "0050"))))
+        advanceUntilIdle()
+
+        assertEquals(SortOrder.DESCENDING, viewModel.sortOrder.value)
+        assertEquals(listOf("2330", "1101", "0050"), codesOf(viewModel.uiState.value))
+    }
+
+    @Test
+    fun `selecting ascending re-sorts the list without a new request`() = runTest {
+        val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330", "0050")))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.onSortOrderSelected(SortOrder.ASCENDING)
+
+        assertEquals(SortOrder.ASCENDING, viewModel.sortOrder.value)
+        assertEquals(listOf("0050", "1101", "2330"), codesOf(viewModel.uiState.value))
+        assertEquals(1, repository.callCount)
+    }
+
+    @Test
+    fun `sort order is kept after refresh and retry`() = runTest {
+        val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onSortOrderSelected(SortOrder.ASCENDING)
+
+        repository.result = Result.success(stocksWithCodes("3008", "2454", "2317"))
+        viewModel.refresh()
+        advanceUntilIdle()
+        assertEquals(listOf("2317", "2454", "3008"), codesOf(viewModel.uiState.value))
+
+        repository.result = Result.failure(IOException("down"))
+        viewModel.refresh()
+        advanceUntilIdle()
+        // A failed refresh keeps the old list in the chosen order.
+        assertEquals(listOf("2317", "2454", "3008"), codesOf(viewModel.uiState.value))
+    }
+
+    @Test
+    fun `selecting the same order keeps the state unchanged`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(stocksWithCodes("1101", "2330"))))
+        advanceUntilIdle()
+        val before = viewModel.uiState.value
+
+        viewModel.onSortOrderSelected(SortOrder.DESCENDING)
+
+        assertEquals(before, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `selecting an order while loading failed does not break the error state`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(IOException("down"))))
+        advanceUntilIdle()
+
+        viewModel.onSortOrderSelected(SortOrder.ASCENDING)
+
+        assertEquals(StockListUiState.Error(LoadError.GENERIC), viewModel.uiState.value)
+        assertEquals(SortOrder.ASCENDING, viewModel.sortOrder.value)
+    }
+
+    @Test
+    fun `selecting an order keeps the refreshing flag`() = runTest {
+        val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+        viewModel.refresh()
+        runCurrent()
+
+        viewModel.onSortOrderSelected(SortOrder.ASCENDING)
+
+        val state = viewModel.uiState.value as StockListUiState.Success
+        assertEquals(true, state.isRefreshing)
+        assertEquals(listOf("1101", "2330"), state.stocks.map { it.code })
+        gate.complete(stocksWithCodes("3008", "2317"))
+        advanceUntilIdle()
+        assertEquals(listOf("2317", "3008"), codesOf(viewModel.uiState.value))
+    }
+
+    @Test
+    fun `sorting an empty list works`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        advanceUntilIdle()
+
+        viewModel.onSortOrderSelected(SortOrder.ASCENDING)
+
+        assertEquals(StockListUiState.Success(emptyList()), viewModel.uiState.value)
+    }
+
+    // Sort sheet
+
+    @Test
+    fun `sort sheet is hidden at first and opens on click`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+
+        viewModel.onSortClicked()
+
+        assertEquals(true, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort sheet closes when dismissed`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        viewModel.onSortClicked()
+
+        viewModel.onSortSheetDismissed()
+
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort sheet closes when an order is selected even if it is the same order`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        viewModel.onSortClicked()
+
+        viewModel.onSortOrderSelected(SortOrder.DESCENDING)
+
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+    }
+
     // Out of bound and extreme values
 
     @Test
@@ -241,7 +373,7 @@ class StockListViewModelTest {
     }
 
     @Test
-    fun `converts a large list and keeps the original order`() = runTest {
+    fun `converts a large list and sorts it by code descending`() = runTest {
         val stocks = List(LARGE_LIST_SIZE) { index -> stock.copy(code = index.toString()) }
         val viewModel = StockListViewModel(FakeRepository(Result.success(stocks)))
 
@@ -249,8 +381,8 @@ class StockListViewModelTest {
             assertEquals(StockListUiState.Loading, awaitItem())
             val result = (awaitItem() as StockListUiState.Success).stocks
             assertEquals(LARGE_LIST_SIZE, result.size)
-            assertEquals("0", result.first().code)
-            assertEquals((LARGE_LIST_SIZE - 1).toString(), result.last().code)
+            assertEquals("999", result.first().code)
+            assertEquals("0", result.last().code)
         }
     }
 

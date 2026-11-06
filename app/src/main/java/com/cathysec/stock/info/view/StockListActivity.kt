@@ -9,7 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.cathysec.stock.info.R
@@ -31,6 +33,9 @@ class StockListActivity : AppCompatActivity() {
     // The enter animation only plays when the list appears, not on every refresh.
     private var isListShown = false
 
+    // After the user picks a new sort order the list starts from the top.
+    private var scrollToTopAfterSort = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -40,6 +45,7 @@ class StockListActivity : AppCompatActivity() {
         setupWindowInsets()
         setupStockList()
         setupStateViews()
+        setupSortSheet()
         observeViewModel()
     }
 
@@ -70,6 +76,29 @@ class StockListActivity : AppCompatActivity() {
         binding.btnRetry.setOnClickListener { viewModel.retry() }
     }
 
+    private fun setupSortSheet() {
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.action_sort) viewModel.onSortClicked()
+            item.itemId == R.id.action_sort
+        }
+        binding.composeSortSheet.setContent {
+            StockTheme {
+                val isVisible by viewModel.isSortSheetVisible.collectAsStateWithLifecycle()
+                val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
+                if (isVisible) {
+                    SortBottomSheet(
+                        selected = sortOrder,
+                        onSelect = { order ->
+                            scrollToTopAfterSort = order != viewModel.sortOrder.value
+                            viewModel.onSortOrderSelected(order)
+                        },
+                        onDismiss = viewModel::onSortSheetDismissed,
+                    )
+                }
+            }
+        }
+    }
+
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -92,12 +121,12 @@ class StockListActivity : AppCompatActivity() {
             is StockListUiState.Success -> {
                 binding.swipeRefresh.isRefreshing = state.isRefreshing
                 val playEnterAnimation = !isListShown
+                val scrollToTop = scrollToTopAfterSort
                 isListShown = true
+                scrollToTopAfterSort = false
                 stockAdapter.submitList(state.stocks) {
-                    if (playEnterAnimation) {
-                        binding.rvStocks.scrollToPosition(0)
-                        binding.rvStocks.scheduleLayoutAnimation()
-                    }
+                    if (playEnterAnimation || scrollToTop) binding.rvStocks.scrollToPosition(0)
+                    if (playEnterAnimation) binding.rvStocks.scheduleLayoutAnimation()
                 }
             }
             is StockListUiState.Error -> {

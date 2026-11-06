@@ -9,6 +9,13 @@
     <dimen name="state_icon_size">64dp</dimen>
     <dimen name="state_spacing">16dp</dimen>
 
+    <!-- Sort bottom sheet -->
+    <dimen name="sort_sheet_horizontal_padding">24dp</dimen>
+    <dimen name="sort_sheet_title_padding">16dp</dimen>
+    <dimen name="sort_sheet_bottom_padding">16dp</dimen>
+    <dimen name="sort_option_min_height">56dp</dimen>
+    <dimen name="sort_option_label_gap">16dp</dimen>
+
     <!-- Stock card -->
     <dimen name="stock_card_height">224dp</dimen>
     <dimen name="stock_card_margin_horizontal">4dp</dimen>
