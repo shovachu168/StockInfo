@@ -19,9 +19,9 @@ class StockFormatUtilTest {
     }
 
     @Test
-    fun `formatPrice rounds half up to two decimals`() {
-        assertEquals("3,786.67", StockFormatUtil.formatPrice(BigDecimal("3786.665")))
-        assertEquals("3,786.66", StockFormatUtil.formatPrice(BigDecimal("3786.664")))
+    fun `formatPrice truncates to two decimals without rounding`() {
+        assertEquals("3,786.66", StockFormatUtil.formatPrice(BigDecimal("3786.665")))
+        assertEquals("3,786.66", StockFormatUtil.formatPrice(BigDecimal("3786.669")))
     }
 
     @Test
@@ -93,8 +93,8 @@ class StockFormatUtilTest {
     }
 
     @Test
-    fun `formatPrice rounds up past the five digit upper bound`() {
-        assertEquals("100,000.00", StockFormatUtil.formatPrice(BigDecimal("99999.995")))
+    fun `formatPrice does not carry past the five digit upper bound`() {
+        assertEquals("99,999.99", StockFormatUtil.formatPrice(BigDecimal("99999.995")))
     }
 
     @Test
@@ -109,9 +109,9 @@ class StockFormatUtilTest {
     }
 
     @Test
-    fun `formatPrice rounds the half up boundary 0_005 to 0_01`() {
-        assertEquals("0.01", StockFormatUtil.formatPrice(BigDecimal("0.005")))
-        assertEquals("0.00", StockFormatUtil.formatPrice(BigDecimal("0.004999")))
+    fun `formatPrice truncates the 0_005 boundary to 0_00`() {
+        assertEquals("0.00", StockFormatUtil.formatPrice(BigDecimal("0.005")))
+        assertEquals("0.01", StockFormatUtil.formatPrice(BigDecimal("0.019999")))
     }
 
     @Test
@@ -133,9 +133,11 @@ class StockFormatUtilTest {
     }
 
     @Test
-    fun `formatChange rounds the half up boundary away from zero`() {
-        assertEquals("+0.01", StockFormatUtil.formatChange(BigDecimal("0.005")))
-        assertEquals("-0.01", StockFormatUtil.formatChange(BigDecimal("-0.005")))
+    fun `formatChange truncates the 0_005 boundary toward zero`() {
+        assertEquals("0.00", StockFormatUtil.formatChange(BigDecimal("0.005")))
+        assertEquals("0.00", StockFormatUtil.formatChange(BigDecimal("-0.005")))
+        assertEquals("+0.01", StockFormatUtil.formatChange(BigDecimal("0.019")))
+        assertEquals("-0.01", StockFormatUtil.formatChange(BigDecimal("-0.019")))
     }
 
     @Test

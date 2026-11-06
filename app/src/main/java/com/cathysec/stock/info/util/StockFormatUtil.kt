@@ -14,7 +14,7 @@ import java.util.Locale
  * - Counts: thousands separators without decimals, e.g. `508,399`
  * - Missing values are shown as [PLACEHOLDER]
  *
- * Values are rounded half up. Symbols are fixed to [Locale.US] so the output
+ * Values are truncated toward zero (not rounded), the same as StockParseUtil. Symbols are fixed to [Locale.US] so the output
  * does not depend on the device locale.
  */
 object StockFormatUtil {
@@ -31,7 +31,7 @@ object StockFormatUtil {
 
     fun formatChange(change: BigDecimal?): String {
         change ?: return PLACEHOLDER
-        // Round first so tiny values such as -0.001 are shown as 0.00 instead of -0.00.
+        // Truncate first so tiny values such as -0.001 are shown as 0.00 instead of -0.00.
         val rounded = change.roundToPriceScale()
         val formatted = priceFormat().format(rounded)
         return if (rounded.signum() > 0) POSITIVE_SIGN + formatted else formatted
@@ -40,7 +40,7 @@ object StockFormatUtil {
     fun formatCount(count: Long?): String =
         count?.let { countFormat().format(it) } ?: PLACEHOLDER
 
-    private fun BigDecimal.roundToPriceScale(): BigDecimal = setScale(PRICE_SCALE, RoundingMode.HALF_UP)
+    private fun BigDecimal.roundToPriceScale(): BigDecimal = setScale(PRICE_SCALE, RoundingMode.DOWN)
 
     // DecimalFormat is not thread-safe, so a new instance is created for every call.
     private fun priceFormat() = DecimalFormat(PRICE_PATTERN, DecimalFormatSymbols(Locale.US))

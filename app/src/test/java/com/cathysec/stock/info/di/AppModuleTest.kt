@@ -1,5 +1,6 @@
 package com.cathysec.stock.info.di
 
+import com.cathysec.stock.info.data.TwseApiService
 import org.junit.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.test.verify.verify
@@ -13,7 +14,8 @@ class AppModuleTest {
 
     @Test
     fun `appModule declares all dependencies`() {
-        appModule.verify()
+        // TwseApiService is provided by networkModule.
+        appModule.verify(extraTypes = listOf(TwseApiService::class))
     }
 
     @Test
