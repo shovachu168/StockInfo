@@ -29,3 +29,6 @@ local.properties
 
 # macOS
 .DS_Store
+
+# Project-specific Claude Code instructions
+CLAUDE.md
