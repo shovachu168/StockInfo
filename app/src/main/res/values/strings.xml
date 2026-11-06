@@ -3,6 +3,15 @@
     <string name="stock_list_title">上市個股日成交資訊</string>
     <string name="action_sort">排序</string>
 
+    <!-- 載入狀態 -->
+    <string name="action_retry">重試</string>
+    <string name="error_no_connection">無法連線，請檢查網路後再試一次</string>
+    <string name="error_timeout">連線逾時，網路可能較慢，請稍後再試</string>
+    <string name="error_generic">資料載入失敗，請稍後再試</string>
+    <string name="refresh_failed_no_connection">更新失敗，目前沒有網路連線</string>
+    <string name="refresh_failed_timeout">更新失敗，連線逾時</string>
+    <string name="refresh_failed_generic">更新失敗，已保留先前的資料</string>
+
     <!-- 股票卡片 -->
     <string name="label_opening_price">開盤價</string>
     <string name="label_closing_price">收盤價</string>

@@ -2,14 +2,20 @@ package com.cathysec.stock.info.viewmodel
 
 import app.cash.turbine.test
 import com.cathysec.stock.info.data.StockRepository
+import com.cathysec.stock.info.model.LoadError
 import com.cathysec.stock.info.model.PriceTrend
 import com.cathysec.stock.info.model.Stock
 import com.cathysec.stock.info.testing.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.math.BigDecimal
 
 class StockListViewModelTest {
@@ -67,26 +73,149 @@ class StockListViewModelTest {
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
-            assertEquals(StockListUiState.Error, awaitItem())
+            assertEquals(StockListUiState.Error(LoadError.GENERIC), awaitItem())
         }
     }
 
     @Test
-    fun `loadStocks retries and emits stocks after a previous failure`() = runTest {
+    fun `retry loads again and emits stocks after a previous failure`() = runTest {
         val repository = FakeRepository(Result.failure(IOException("network error")))
         val viewModel = StockListViewModel(repository)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
-            assertEquals(StockListUiState.Error, awaitItem())
+            assertEquals(StockListUiState.Error(LoadError.GENERIC), awaitItem())
 
             repository.result = Result.success(listOf(stock))
-            viewModel.loadStocks()
+            viewModel.retry()
 
             assertEquals(StockListUiState.Loading, awaitItem())
             assertEquals(1, (awaitItem() as StockListUiState.Success).stocks.size)
         }
         assertEquals(2, repository.callCount)
+    }
+
+    @Test
+    fun `emits NO_CONNECTION error when the device is offline`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(UnknownHostException("host"))))
+
+        viewModel.uiState.test {
+            assertEquals(StockListUiState.Loading, awaitItem())
+            assertEquals(StockListUiState.Error(LoadError.NO_CONNECTION), awaitItem())
+        }
+    }
+
+    @Test
+    fun `emits TIMEOUT error when the request times out`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(SocketTimeoutException("slow"))))
+
+        viewModel.uiState.test {
+            assertEquals(StockListUiState.Loading, awaitItem())
+            assertEquals(StockListUiState.Error(LoadError.TIMEOUT), awaitItem())
+        }
+    }
+
+    // Refresh
+
+    @Test
+    fun `refresh keeps the list on screen and replaces it with new data`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val old = awaitItem() as StockListUiState.Success
+            repository.result = Result.success(listOf(stock.copy(code = "2317"), stock.copy(code = "2454")))
+
+            viewModel.refresh()
+
+            // The old list is still there while refreshing.
+            assertEquals(StockListUiState.Success(old.stocks, isRefreshing = true), awaitItem())
+            val refreshed = awaitItem() as StockListUiState.Success
+            assertEquals(listOf("2317", "2454"), refreshed.stocks.map { it.code })
+            assertEquals(false, refreshed.isRefreshing)
+        }
+    }
+
+    @Test
+    fun `refresh failure keeps the old list and emits a one time error`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+        val old = viewModel.uiState.value as StockListUiState.Success
+        repository.result = Result.failure(UnknownHostException("host"))
+
+        viewModel.refreshErrors.test {
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            assertEquals(LoadError.NO_CONNECTION, awaitItem())
+            assertEquals(StockListUiState.Success(old.stocks, isRefreshing = false), viewModel.uiState.value)
+        }
+    }
+
+    @Test
+    fun `refresh without a list behaves like retry`() = runTest {
+        val repository = FakeRepository(Result.failure(IOException("network error")))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+        repository.result = Result.success(listOf(stock))
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertEquals(1, (viewModel.uiState.value as StockListUiState.Success).stocks.size)
+        assertEquals(2, repository.callCount)
+    }
+
+    @Test
+    fun `refresh and retry are ignored while a load is running`() = runTest {
+        val gate = CompletableDeferred<List<Stock>>()
+        val repository = FakeRepository(Result.success(listOf(stock))).apply { onGetStocks = { gate.await() } }
+        val viewModel = StockListViewModel(repository)
+        runCurrent()
+
+        viewModel.refresh()
+        viewModel.retry()
+        viewModel.refresh()
+        runCurrent()
+
+        assertEquals(1, repository.callCount)
+        gate.complete(listOf(stock))
+        advanceUntilIdle()
+        assertEquals(1, repository.callCount)
+        assertEquals(1, (viewModel.uiState.value as StockListUiState.Success).stocks.size)
+    }
+
+    @Test
+    fun `refresh is ignored while another refresh is running`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+
+        viewModel.refresh()
+        viewModel.refresh()
+        runCurrent()
+
+        assertEquals(2, repository.callCount)
+        gate.complete(listOf(stock))
+        advanceUntilIdle()
+        assertEquals(false, (viewModel.uiState.value as StockListUiState.Success).isRefreshing)
+    }
+
+    @Test
+    fun `refresh can return an empty list`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+        repository.result = Result.success(emptyList())
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertEquals(StockListUiState.Success(emptyList()), viewModel.uiState.value)
     }
 
     // Out of bound and extreme values
@@ -161,9 +290,12 @@ class StockListViewModelTest {
         var callCount = 0
             private set
 
+        /** When set, replaces the result so a test can hold the request open. */
+        var onGetStocks: (suspend () -> List<Stock>)? = null
+
         override suspend fun getStocks(): List<Stock> {
             callCount++
-            return result.getOrThrow()
+            return onGetStocks?.invoke() ?: result.getOrThrow()
         }
     }
 }
