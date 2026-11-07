@@ -113,7 +113,9 @@ class StockListViewModel(
         }
     }
 
+    /** Opens the sort sheet. Ignored while there is no list to sort (loading or error). */
     fun onSortClicked() {
+        if (_uiState.value !is StockListUiState.Success) return
         _isSortSheetVisible.value = true
     }
 

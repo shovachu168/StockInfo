@@ -149,6 +149,8 @@ class StockListActivity : AppCompatActivity() {
     }
 
     private fun render(state: StockListUiState) {
+        // Sorting needs a list, so the sort icon is only shown when the list is shown.
+        binding.toolbar.menu.findItem(R.id.action_sort)?.isVisible = state is StockListUiState.Success
         binding.progress.visibility = visibleIf(state is StockListUiState.Loading)
         binding.swipeRefresh.visibility = visibleIf(state is StockListUiState.Success)
         binding.errorView.visibility = visibleIf(state is StockListUiState.Error)

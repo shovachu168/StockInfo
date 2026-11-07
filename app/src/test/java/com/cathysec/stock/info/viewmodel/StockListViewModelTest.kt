@@ -329,6 +329,49 @@ class StockListViewModelTest {
         val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
         assertEquals(false, viewModel.isSortSheetVisible.value)
 
+        advanceUntilIdle()
+        viewModel.onSortClicked()
+
+        assertEquals(true, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort click is ignored while the list is loading`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
+        runCurrent()
+
+        viewModel.onSortClicked()
+
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort click is ignored when loading failed`() = runTest {
+        val viewModel = StockListViewModel(
+            FakeRepository(Result.failure(IOException("network error"))),
+            mainDispatcherRule.testDispatcher,
+        )
+        advanceUntilIdle()
+
+        viewModel.onSortClicked()
+
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort click works again after a retry succeeds`() = runTest {
+        val repository = FakeRepository(Result.failure(IOException("network error")))
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
+        viewModel.onSortClicked()
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+
+        repository.result = Result.success(listOf(stock))
+        viewModel.retry()
+        advanceUntilIdle()
         viewModel.onSortClicked()
 
         assertEquals(true, viewModel.isSortSheetVisible.value)
@@ -337,6 +380,7 @@ class StockListViewModelTest {
     @Test
     fun `sort sheet closes when dismissed`() = runTest {
         val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
         viewModel.onSortClicked()
 
         viewModel.onSortSheetDismissed()
@@ -347,6 +391,7 @@ class StockListViewModelTest {
     @Test
     fun `sort sheet closes when an order is selected even if it is the same order`() = runTest {
         val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
         viewModel.onSortClicked()
 
         viewModel.onSortOrderSelected(SortOrder.DESCENDING)
