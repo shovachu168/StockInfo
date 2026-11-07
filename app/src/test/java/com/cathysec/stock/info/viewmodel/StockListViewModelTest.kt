@@ -44,7 +44,7 @@ class StockListViewModelTest {
 
     @Test
     fun `emits loading then formatted stocks when loading succeeds`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -74,7 +74,7 @@ class StockListViewModelTest {
 
     @Test
     fun `emits error when loading fails`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.failure(IOException("network error"))))
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(IOException("network error"))), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -85,7 +85,7 @@ class StockListViewModelTest {
     @Test
     fun `retry loads again and emits stocks after a previous failure`() = runTest {
         val repository = FakeRepository(Result.failure(IOException("network error")))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -102,7 +102,7 @@ class StockListViewModelTest {
 
     @Test
     fun `emits NO_CONNECTION error when the device is offline`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.failure(UnknownHostException("host"))))
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(UnknownHostException("host"))), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -112,7 +112,7 @@ class StockListViewModelTest {
 
     @Test
     fun `emits TIMEOUT error when the request times out`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.failure(SocketTimeoutException("slow"))))
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(SocketTimeoutException("slow"))), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -125,7 +125,7 @@ class StockListViewModelTest {
     @Test
     fun `refresh keeps the list on screen and replaces it with new data`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -145,7 +145,7 @@ class StockListViewModelTest {
     @Test
     fun `refresh failure keeps the old list and emits a one time error`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         val old = viewModel.uiState.value as StockListUiState.Success
         repository.result = Result.failure(UnknownHostException("host"))
@@ -162,7 +162,7 @@ class StockListViewModelTest {
     @Test
     fun `refresh without a list behaves like retry`() = runTest {
         val repository = FakeRepository(Result.failure(IOException("network error")))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         repository.result = Result.success(listOf(stock))
 
@@ -177,7 +177,7 @@ class StockListViewModelTest {
     fun `refresh and retry are ignored while a load is running`() = runTest {
         val gate = CompletableDeferred<List<Stock>>()
         val repository = FakeRepository(Result.success(listOf(stock))).apply { onGetStocks = { gate.await() } }
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         runCurrent()
 
         viewModel.refresh()
@@ -195,7 +195,7 @@ class StockListViewModelTest {
     @Test
     fun `refresh is ignored while another refresh is running`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         val gate = CompletableDeferred<List<Stock>>()
         repository.onGetStocks = { gate.await() }
@@ -213,7 +213,7 @@ class StockListViewModelTest {
     @Test
     fun `refresh can return an empty list`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         repository.result = Result.success(emptyList())
 
@@ -231,7 +231,7 @@ class StockListViewModelTest {
 
     @Test
     fun `list is sorted by code descending by default`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(stocksWithCodes("1101", "2330", "0050"))))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(stocksWithCodes("1101", "2330", "0050"))), mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         assertEquals(SortOrder.DESCENDING, viewModel.sortOrder.value)
@@ -241,7 +241,7 @@ class StockListViewModelTest {
     @Test
     fun `selecting ascending re-sorts the list without a new request`() = runTest {
         val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330", "0050")))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         viewModel.onSortOrderSelected(SortOrder.ASCENDING)
@@ -254,7 +254,7 @@ class StockListViewModelTest {
     @Test
     fun `sort order is kept after refresh and retry`() = runTest {
         val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         viewModel.onSortOrderSelected(SortOrder.ASCENDING)
 
@@ -272,7 +272,7 @@ class StockListViewModelTest {
 
     @Test
     fun `selecting the same order keeps the state unchanged`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(stocksWithCodes("1101", "2330"))))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(stocksWithCodes("1101", "2330"))), mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         val before = viewModel.uiState.value
 
@@ -283,7 +283,7 @@ class StockListViewModelTest {
 
     @Test
     fun `selecting an order while loading failed does not break the error state`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.failure(IOException("down"))))
+        val viewModel = StockListViewModel(FakeRepository(Result.failure(IOException("down"))), mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         viewModel.onSortOrderSelected(SortOrder.ASCENDING)
@@ -295,7 +295,7 @@ class StockListViewModelTest {
     @Test
     fun `selecting an order keeps the refreshing flag`() = runTest {
         val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
         val gate = CompletableDeferred<List<Stock>>()
         repository.onGetStocks = { gate.await() }
@@ -314,7 +314,7 @@ class StockListViewModelTest {
 
     @Test
     fun `sorting an empty list works`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         viewModel.onSortOrderSelected(SortOrder.ASCENDING)
@@ -326,7 +326,7 @@ class StockListViewModelTest {
 
     @Test
     fun `sort sheet is hidden at first and opens on click`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
         assertEquals(false, viewModel.isSortSheetVisible.value)
 
         viewModel.onSortClicked()
@@ -336,7 +336,7 @@ class StockListViewModelTest {
 
     @Test
     fun `sort sheet closes when dismissed`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
         viewModel.onSortClicked()
 
         viewModel.onSortSheetDismissed()
@@ -346,7 +346,7 @@ class StockListViewModelTest {
 
     @Test
     fun `sort sheet closes when an order is selected even if it is the same order`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
         viewModel.onSortClicked()
 
         viewModel.onSortOrderSelected(SortOrder.DESCENDING)
@@ -358,7 +358,7 @@ class StockListViewModelTest {
 
     @Test
     fun `emits empty success when repository returns no stocks`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(emptyList())), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -368,7 +368,7 @@ class StockListViewModelTest {
 
     @Test
     fun `emits a single stock when repository returns one stock`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -379,7 +379,7 @@ class StockListViewModelTest {
     @Test
     fun `converts a large list and sorts it by code descending`() = runTest {
         val stocks = List(LARGE_LIST_SIZE) { index -> stock.copy(code = index.toString()) }
-        val viewModel = StockListViewModel(FakeRepository(Result.success(stocks)))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(stocks)), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -405,7 +405,7 @@ class StockListViewModelTest {
             tradeVolume = null,
             tradeValue = null,
         )
-        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(emptyStock))))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(emptyStock))), mainDispatcherRule.testDispatcher)
 
         viewModel.uiState.test {
             assertEquals(StockListUiState.Loading, awaitItem())
@@ -430,7 +430,7 @@ class StockListViewModelTest {
     @Test
     fun `loads valuations once at startup`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        StockListViewModel(repository)
+        StockListViewModel(repository, mainDispatcherRule.testDispatcher)
 
         advanceUntilIdle()
 
@@ -439,7 +439,7 @@ class StockListViewModelTest {
 
     @Test
     fun `dialog is closed until a stock is clicked`() = runTest {
-        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))))
+        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))), mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         assertNull(viewModel.valuationDialog.value)
@@ -449,7 +449,7 @@ class StockListViewModelTest {
     fun `click shows formatted valuations when loaded`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
         repository.valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         viewModel.onStockClicked("2330", "TSMC")
@@ -467,7 +467,7 @@ class StockListViewModelTest {
         repository.valuations.value = ValuationsState.Loaded(
             mapOf("2330" to StockValuation("2330", peRatio = null, dividendYield = null, pbRatio = BigDecimal.ZERO)),
         )
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
 
         viewModel.onStockClicked("2330", "TSMC")
         advanceUntilIdle()
@@ -482,7 +482,7 @@ class StockListViewModelTest {
     fun `click shows no data when the code is not in the valuations`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
         repository.valuations.value = ValuationsState.Loaded(emptyMap())
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
 
         viewModel.onStockClicked("9999", "Unknown")
         advanceUntilIdle()
@@ -493,7 +493,7 @@ class StockListViewModelTest {
     @Test
     fun `click while loading shows loading and switches to the result by itself`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         viewModel.onStockClicked("2330", "TSMC")
@@ -511,7 +511,7 @@ class StockListViewModelTest {
     @Test
     fun `click while loading switches to failed when the request fails`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         viewModel.onStockClicked("2330", "TSMC")
         advanceUntilIdle()
 
@@ -528,7 +528,7 @@ class StockListViewModelTest {
     fun `retry requests valuations again and the dialog goes back to loading then loaded`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
         repository.valuations.value = ValuationsState.Failed(LoadError.NO_CONNECTION)
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         viewModel.onStockClicked("2330", "TSMC")
         advanceUntilIdle()
         assertEquals(
@@ -553,7 +553,7 @@ class StockListViewModelTest {
     @Test
     fun `dismiss closes the dialog and later results do not reopen it`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         viewModel.onStockClicked("2330", "TSMC")
         advanceUntilIdle()
 
@@ -568,7 +568,7 @@ class StockListViewModelTest {
     fun `list state is not affected when valuations fail`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
         repository.valuations.value = ValuationsState.Failed(LoadError.GENERIC)
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
         advanceUntilIdle()
 
         assertEquals(1, (viewModel.uiState.value as StockListUiState.Success).stocks.size)
@@ -578,7 +578,7 @@ class StockListViewModelTest {
     fun `clicking another stock replaces the dialog content`() = runTest {
         val repository = FakeRepository(Result.success(listOf(stock)))
         repository.valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
-        val viewModel = StockListViewModel(repository)
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
 
         viewModel.onStockClicked("2330", "TSMC")
         advanceUntilIdle()

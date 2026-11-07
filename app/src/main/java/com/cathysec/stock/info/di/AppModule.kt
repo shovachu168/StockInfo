@@ -4,7 +4,7 @@ import com.cathysec.stock.info.data.StockRepository
 import com.cathysec.stock.info.data.TwseStockRepository
 import com.cathysec.stock.info.viewmodel.StockListViewModel
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -13,5 +13,5 @@ import org.koin.dsl.module
  */
 val appModule = module {
     singleOf(::TwseStockRepository) bind StockRepository::class
-    viewModelOf(::StockListViewModel)
+    viewModel { StockListViewModel(repository = get()) }
 }

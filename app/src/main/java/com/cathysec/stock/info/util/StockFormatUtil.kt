@@ -50,8 +50,13 @@ object StockFormatUtil {
 
     private fun BigDecimal.roundToPriceScale(): BigDecimal = setScale(PRICE_SCALE, RoundingMode.DOWN)
 
-    // DecimalFormat is not thread-safe, so a new instance is created for every call.
-    private fun priceFormat() = DecimalFormat(PRICE_PATTERN, DecimalFormatSymbols(Locale.US))
+    // DecimalFormat is not thread-safe and expensive to create (thousands of items are formatted
+    // when the list loads), so each thread keeps and reuses its own instance.
+    private val priceFormat = ThreadLocal.withInitial { DecimalFormat(PRICE_PATTERN, DecimalFormatSymbols(Locale.US)) }
 
-    private fun countFormat() = DecimalFormat(COUNT_PATTERN, DecimalFormatSymbols(Locale.US))
+    private val countFormat = ThreadLocal.withInitial { DecimalFormat(COUNT_PATTERN, DecimalFormatSymbols(Locale.US)) }
+
+    private fun priceFormat(): DecimalFormat = priceFormat.get()!!
+
+    private fun countFormat(): DecimalFormat = countFormat.get()!!
 }

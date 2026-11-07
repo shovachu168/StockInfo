@@ -203,4 +203,25 @@ class StockFormatUtilTest {
     fun `formatRatio keeps minus sign for negative values`() {
         assertEquals("-3.50", StockFormatUtil.formatRatio(BigDecimal("-3.5")))
     }
+
+    // ---- thread safety ----
+
+    @Test
+    fun `formatting gives the same result when called from many threads at once`() {
+        val pool = java.util.concurrent.Executors.newFixedThreadPool(8)
+        try {
+            val results = (1..200).map { i ->
+                pool.submit<String> {
+                    StockFormatUtil.formatPrice(BigDecimal(i)) + "|" + StockFormatUtil.formatCount(i * 1_000L)
+                }
+            }.map { it.get() }
+
+            results.forEachIndexed { index, text ->
+                val i = index + 1
+                assertEquals(StockFormatUtil.formatPrice(BigDecimal(i)) + "|" + StockFormatUtil.formatCount(i * 1_000L), text)
+            }
+        } finally {
+            pool.shutdown()
+        }
+    }
 }

@@ -10,6 +10,8 @@ import com.cathysec.stock.info.model.ValuationsState
 import com.cathysec.stock.info.util.LoadErrorUtil
 import com.cathysec.stock.info.util.StockSortUtil
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -21,9 +23,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class StockListViewModel(
     private val repository: StockRepository,
+    // Sorting and formatting thousands of items is moved off the main thread so the loading
+    // indicator keeps animating. Tests pass a test dispatcher.
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<StockListUiState>(StockListUiState.Loading)
@@ -151,9 +157,14 @@ class StockListViewModel(
     private fun isLoading() = loadJob?.isActive == true
 
     private suspend fun fetchStocks(): List<StockUiModel> {
-        loadedStocks = repository.getStocks()
-        return sortedUiModels()
+        val stocks = repository.getStocks()
+        loadedStocks = stocks
+        val order = _sortOrder.value
+        val models = withContext(defaultDispatcher) { sortedUiModels(stocks, order) }
+        // The user may have picked another order while the list was being prepared.
+        return if (order == _sortOrder.value) models else sortedUiModels()
     }
 
-    private fun sortedUiModels() = StockSortUtil.sortByCode(loadedStocks, _sortOrder.value).map(Stock::toUiModel)
+    private fun sortedUiModels(stocks: List<Stock> = loadedStocks, order: SortOrder = _sortOrder.value) =
+        StockSortUtil.sortByCode(stocks, order).map(Stock::toUiModel)
 }
