@@ -3,13 +3,17 @@ package com.cathysec.stock.info.view
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +52,7 @@ class StockListActivity : AppCompatActivity() {
         setupWindowInsets()
         setupStockList()
         setupStateViews()
+        setupToTopButton()
         setupSortSheet()
         setupVersionToast()
         setupValuationDialog()
@@ -67,6 +72,38 @@ class StockListActivity : AppCompatActivity() {
                 bottom = basePaddingBottom + systemBars.bottom,
             )
             insets
+        }
+    }
+
+    // The button appears once the first card has scrolled out of view and scrolls the list back to the top.
+    private fun setupToTopButton() {
+        val fab = binding.fabToTop
+        val baseMarginRight = (fab.layoutParams as ViewGroup.MarginLayoutParams).rightMargin
+        val baseMarginBottom = (fab.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        ViewCompat.setOnApplyWindowInsetsListener(fab) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                rightMargin = baseMarginRight + systemBars.right
+                bottomMargin = baseMarginBottom + systemBars.bottom
+            }
+            insets
+        }
+        binding.rvStocks.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                if (layoutManager.findFirstVisibleItemPosition() > 0) fab.show() else fab.hide()
+            }
+        })
+        fab.setOnClickListener {
+            val list = binding.rvStocks
+            // Far away items would take very long to scroll through, so jump close to the top first.
+            val layoutManager = list.layoutManager as LinearLayoutManager
+            if (layoutManager.findFirstVisibleItemPosition() > SMOOTH_SCROLL_MAX_POSITION) {
+                list.scrollToPosition(SMOOTH_SCROLL_MAX_POSITION)
+            }
+            list.smoothScrollToPosition(0)
+            // Bring the collapsed title bar back together with the list.
+            binding.appBar.setExpanded(true, true)
         }
     }
 
@@ -150,6 +187,7 @@ class StockListActivity : AppCompatActivity() {
     }
 
     private fun render(state: StockListUiState) {
+        if (state !is StockListUiState.Success) binding.fabToTop.hide()
         // Sorting needs a list, so the sort icon is only shown when the list is shown.
         binding.toolbar.menu.findItem(R.id.action_sort)?.isVisible = state is StockListUiState.Success
         binding.progress.visibility = visibleIf(state is StockListUiState.Loading)
@@ -181,5 +219,6 @@ class StockListActivity : AppCompatActivity() {
     private companion object {
         const val VERSION_TAP_COUNT = 3
         const val VERSION_TAP_INTERVAL_MILLIS = 500L
+        const val SMOOTH_SCROLL_MAX_POSITION = 10
     }
 }

@@ -12,12 +12,14 @@
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
         app:liftOnScroll="true"
+        app:statusBarForeground="?attr/colorSurface"
         app:liftOnScrollTargetViewId="@id/rv_stocks">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways"
             app:menu="@menu/menu_stock_list"
             app:title="@string/stock_list_title" />
 
@@ -46,6 +48,20 @@
                 tools:listitem="@layout/item_stock" />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <!-- Scrolls the list back to the top; shown only after the list has been scrolled down -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_to_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/to_top_margin"
+            android:contentDescription="@string/action_to_top"
+            android:visibility="gone"
+            app:backgroundTint="?attr/colorPrimary"
+            app:srcCompat="@drawable/ic_arrow_upward"
+            app:tint="?attr/colorOnPrimary"
+            tools:visibility="visible" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/progress"

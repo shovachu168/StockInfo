@@ -2,14 +2,15 @@
     <string name="app_name">StockInfo</string>
     <string name="stock_list_title">上市個股日成交資訊</string>
     <string name="action_sort">排序</string>
+    <string name="action_to_top">回到頂端</string>
     <string name="app_version">版本 %1$s</string>
 
-    <!-- 排序 -->
+    <!-- sort -->
     <string name="sort_title">排序方式</string>
     <string name="sort_code_descending">依股票代號降序</string>
     <string name="sort_code_ascending">依股票代號升序</string>
 
-    <!-- 載入狀態 -->
+    <!-- loading state -->
     <string name="action_retry">重試</string>
     <string name="error_no_connection">無法連線，請檢查網路後再試一次</string>
     <string name="error_timeout">連線逾時，網路可能較慢，請稍後再試</string>
@@ -18,14 +19,14 @@
     <string name="refresh_failed_timeout">更新失敗，連線逾時</string>
     <string name="refresh_failed_generic">更新失敗，已保留先前的資料</string>
 
-    <!-- 估值對話框 -->
+    <!-- dialog string -->
     <string name="valuation_loading">正在抓取資料中</string>
     <string name="valuation_no_data">找不到對應資料</string>
     <string name="label_pe_ratio">本益比</string>
     <string name="label_dividend_yield">殖利率</string>
     <string name="label_pb_ratio">股價淨值比</string>
 
-    <!-- 股票卡片 -->
+    <!-- view item string -->
     <string name="label_opening_price">開盤價</string>
     <string name="label_closing_price">收盤價</string>
     <string name="label_highest_price">最高價</string>
