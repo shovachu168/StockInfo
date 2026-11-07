@@ -1,11 +1,13 @@
 package com.cathysec.stock.info.util
 
-import com.cathysec.stock.info.data.StockDayAverageResponse
-import com.cathysec.stock.info.data.StockDayResponse
+import com.cathysec.stock.info.data.response.StockDayAverageResponse
+import com.cathysec.stock.info.data.response.StockDayResponse
+import com.cathysec.stock.info.data.response.StockValuationResponse
 import com.cathysec.stock.info.model.Stock
+import com.cathysec.stock.info.model.StockValuation
 
 /**
- * Merges the daily trading information with the monthly average prices.
+ * Merges the daily trading information with the monthly average prices and converts valuation data.
  */
 object StockMergeUtil {
 
@@ -34,4 +36,18 @@ object StockMergeUtil {
             )
         }
     }
+
+    /**
+     * Converts the valuation items to a map by stock code. Values that are missing or cannot be parsed
+     * become null. If a code appears more than once, the last item is used.
+     */
+    fun toValuations(responses: List<StockValuationResponse>): Map<String, StockValuation> =
+        responses.associate { item ->
+            item.code to StockValuation(
+                code = item.code,
+                peRatio = StockParseUtil.parsePrice(item.peRatio),
+                dividendYield = StockParseUtil.parsePrice(item.dividendYield),
+                pbRatio = StockParseUtil.parsePrice(item.pbRatio),
+            )
+        }
 }

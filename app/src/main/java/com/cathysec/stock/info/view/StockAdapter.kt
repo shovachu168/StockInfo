@@ -11,11 +11,13 @@ import com.cathysec.stock.info.model.PriceTrend
 import com.cathysec.stock.info.viewmodel.StockUiModel
 import com.google.android.material.color.MaterialColors
 
-class StockAdapter : ListAdapter<StockUiModel, StockAdapter.StockViewHolder>(StockDiffCallback) {
+class StockAdapter(
+    private val onItemClick: (StockUiModel) -> Unit,
+) : ListAdapter<StockUiModel, StockAdapter.StockViewHolder>(StockDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StockViewHolder {
         val binding = ItemStockBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return StockViewHolder(binding)
+        return StockViewHolder(binding, onItemClick)
     }
 
     override fun onBindViewHolder(holder: StockViewHolder, position: Int) {
@@ -24,9 +26,11 @@ class StockAdapter : ListAdapter<StockUiModel, StockAdapter.StockViewHolder>(Sto
 
     class StockViewHolder(
         private val binding: ItemStockBinding,
+        private val onItemClick: (StockUiModel) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: StockUiModel) = with(binding) {
+            root.setOnClickListener { onItemClick(item) }
             tvCode.text = item.code
             tvName.text = item.name
             fieldOpeningPrice.value = item.openingPrice

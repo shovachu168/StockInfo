@@ -99,4 +99,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <!-- Hosts the Compose valuation dialog; the dialog itself is shown in its own window -->
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_valuation_dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

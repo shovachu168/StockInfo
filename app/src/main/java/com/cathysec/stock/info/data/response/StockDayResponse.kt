@@ -1,4 +1,4 @@
-package com.cathysec.stock.info.data
+package com.cathysec.stock.info.data.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

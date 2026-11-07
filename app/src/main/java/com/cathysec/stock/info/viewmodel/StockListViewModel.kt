@@ -6,6 +6,7 @@ import com.cathysec.stock.info.data.StockRepository
 import com.cathysec.stock.info.model.LoadError
 import com.cathysec.stock.info.model.SortOrder
 import com.cathysec.stock.info.model.Stock
+import com.cathysec.stock.info.model.ValuationsState
 import com.cathysec.stock.info.util.LoadErrorUtil
 import com.cathysec.stock.info.util.StockSortUtil
 import kotlinx.coroutines.CancellationException
@@ -13,9 +14,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class StockListViewModel(
@@ -37,6 +41,18 @@ class StockListViewModel(
     private val _isSortSheetVisible = MutableStateFlow(false)
     val isSortSheetVisible: StateFlow<Boolean> = _isSortSheetVisible.asStateFlow()
 
+    // The stock whose valuation dialog is open (code to name). Kept here so the dialog survives rotation.
+    private val selectedStock = MutableStateFlow<Pair<String, String>?>(null)
+
+    /**
+     * State of the valuation dialog, or null when it is closed. It follows the repository, so a dialog
+     * opened while the data is loading switches to the result by itself.
+     */
+    val valuationDialog: StateFlow<ValuationDialogUiState?> =
+        combine(selectedStock, repository.valuations) { selected, valuations ->
+            selected?.let { (code, name) -> valuationDialogState(code, name, valuations) }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     // The latest loaded stocks in API order, so changing the sort order does not need a new request.
     private var loadedStocks: List<Stock> = emptyList()
 
@@ -44,6 +60,8 @@ class StockListViewModel(
 
     init {
         retry()
+        // Independent of the list: the result never changes the list state.
+        loadValuations()
     }
 
     /**
@@ -104,6 +122,30 @@ class StockListViewModel(
         _sortOrder.value = order
         val current = _uiState.value as? StockListUiState.Success ?: return
         _uiState.value = current.copy(stocks = sortedUiModels())
+    }
+
+    fun onStockClicked(code: String, name: String) {
+        selectedStock.value = code to name
+    }
+
+    fun onValuationDialogDismissed() {
+        selectedStock.value = null
+    }
+
+    /** Requests the valuation data again after a failure. */
+    fun onValuationRetry() {
+        loadValuations()
+    }
+
+    private fun loadValuations() {
+        viewModelScope.launch { repository.loadValuations() }
+    }
+
+    private fun valuationDialogState(code: String, name: String, valuations: ValuationsState) = when (valuations) {
+        ValuationsState.Loading -> ValuationDialogUiState.Loading(code, name)
+        is ValuationsState.Failed -> ValuationDialogUiState.Failed(code, name, valuations.error)
+        is ValuationsState.Loaded ->
+            valuations.valuations[code]?.toDialogState(name) ?: ValuationDialogUiState.NoData(code, name)
     }
 
     private fun isLoading() = loadJob?.isActive == true

@@ -1,5 +1,7 @@
 package com.cathysec.stock.info.util
 
+import androidx.annotation.StringRes
+import com.cathysec.stock.info.R
 import com.cathysec.stock.info.model.LoadError
 import java.io.InterruptedIOException
 import java.net.ConnectException
@@ -23,6 +25,28 @@ object LoadErrorUtil {
                 LoadError.NO_CONNECTION
             else -> LoadError.GENERIC
         }
+    }
+
+    /**
+     * Returns the string resource of the message for [error], for screens where loading failed
+     * and nothing else can be shown. Only the resource id is used, no Android class is involved.
+     */
+    @StringRes
+    fun messageRes(error: LoadError): Int = when (error) {
+        LoadError.NO_CONNECTION -> R.string.error_no_connection
+        LoadError.TIMEOUT -> R.string.error_timeout
+        LoadError.GENERIC -> R.string.error_generic
+    }
+
+    /**
+     * Returns the string resource of the short message for [error], shown when a pull-to-refresh
+     * fails and the previous list stays on screen.
+     */
+    @StringRes
+    fun refreshFailedMessageRes(error: LoadError): Int = when (error) {
+        LoadError.NO_CONNECTION -> R.string.refresh_failed_no_connection
+        LoadError.TIMEOUT -> R.string.refresh_failed_timeout
+        LoadError.GENERIC -> R.string.refresh_failed_generic
     }
 
     // Guards against a cyclic cause chain.

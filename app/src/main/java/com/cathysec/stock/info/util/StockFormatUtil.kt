@@ -11,6 +11,8 @@ import java.util.Locale
  *
  * - Prices: thousands separators and two decimal places, e.g. `2,320.00`
  * - Change: same as prices with an explicit `+` for positive values, e.g. `+40.00`
+ * - Ratios (P/E, P/B): same as prices, e.g. `26.20`
+ * - Yield: a ratio with a percent sign, e.g. `3.12%`
  * - Counts: thousands separators without decimals, e.g. `508,399`
  * - Missing values are shown as [PLACEHOLDER]
  *
@@ -25,9 +27,15 @@ object StockFormatUtil {
     private const val PRICE_PATTERN = "#,##0.00"
     private const val COUNT_PATTERN = "#,##0"
     private const val POSITIVE_SIGN = "+"
+    private const val PERCENT_SIGN = "%"
 
     fun formatPrice(price: BigDecimal?): String =
         price?.let { priceFormat().format(it.roundToPriceScale()) } ?: PLACEHOLDER
+
+    fun formatRatio(ratio: BigDecimal?): String = formatPrice(ratio)
+
+    fun formatYield(percent: BigDecimal?): String =
+        percent?.let { formatPrice(it) + PERCENT_SIGN } ?: PLACEHOLDER
 
     fun formatChange(change: BigDecimal?): String {
         change ?: return PLACEHOLDER

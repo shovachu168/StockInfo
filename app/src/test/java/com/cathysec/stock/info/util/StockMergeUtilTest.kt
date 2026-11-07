@@ -1,7 +1,8 @@
 package com.cathysec.stock.info.util
 
-import com.cathysec.stock.info.data.StockDayAverageResponse
-import com.cathysec.stock.info.data.StockDayResponse
+import com.cathysec.stock.info.data.response.StockDayAverageResponse
+import com.cathysec.stock.info.data.response.StockDayResponse
+import com.cathysec.stock.info.data.response.StockValuationResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -165,5 +166,72 @@ class StockMergeUtilTest {
         val stocks = StockMergeUtil.merge(listOf(day("2330")), listOf(average("2330")))
 
         assertEquals(1, stocks.size)
+    }
+
+    // ---- toValuations ----
+
+    private fun valuation(
+        code: String,
+        pe: String? = "26.20",
+        yield: String? = "1.50",
+        pb: String? = "6.10",
+    ) = StockValuationResponse(code = code, name = "name-$code", peRatio = pe, dividendYield = yield, pbRatio = pb)
+
+    @Test
+    fun `toValuations maps every field by code`() {
+        val result = StockMergeUtil.toValuations(listOf(valuation("2330"), valuation("1101", pe = "10.5")))
+
+        assertEquals(2, result.size)
+        assertEquals(BigDecimal("26.20"), result.getValue("2330").peRatio)
+        assertEquals(BigDecimal("1.50"), result.getValue("2330").dividendYield)
+        assertEquals(BigDecimal("6.10"), result.getValue("2330").pbRatio)
+        assertEquals(BigDecimal("10.50"), result.getValue("1101").peRatio)
+    }
+
+    @Test
+    fun `toValuations turns empty or unparsable values into null`() {
+        val result = StockMergeUtil.toValuations(listOf(valuation("2330", pe = "", yield = "--", pb = "abc")))
+
+        val item = result.getValue("2330")
+        assertNull(item.peRatio)
+        assertNull(item.dividendYield)
+        assertNull(item.pbRatio)
+    }
+
+    @Test
+    fun `toValuations turns missing fields into null`() {
+        val result = StockMergeUtil.toValuations(listOf(StockValuationResponse(code = "2330", name = "TSMC")))
+
+        assertNull(result.getValue("2330").peRatio)
+    }
+
+    @Test
+    fun `toValuations truncates to two decimals and keeps huge or negative values`() {
+        val result = StockMergeUtil.toValuations(
+            listOf(valuation("2330", pe = "0.009", yield = "99999999999999999999.999", pb = "-1.239")),
+        )
+
+        val item = result.getValue("2330")
+        assertEquals(BigDecimal("0.00"), item.peRatio)
+        assertEquals(BigDecimal("99999999999999999999.99"), item.dividendYield)
+        assertEquals(BigDecimal("-1.23"), item.pbRatio)
+    }
+
+    @Test
+    fun `toValuations returns an empty map for an empty list`() {
+        assertTrue(StockMergeUtil.toValuations(emptyList()).isEmpty())
+    }
+
+    @Test
+    fun `toValuations uses the last item when a code is duplicated`() {
+        val result = StockMergeUtil.toValuations(listOf(valuation("2330", pe = "1"), valuation("2330", pe = "2")))
+
+        assertEquals(1, result.size)
+        assertEquals(BigDecimal("2.00"), result.getValue("2330").peRatio)
+    }
+
+    @Test
+    fun `toValuations returns null for a code that is not in the list`() {
+        assertNull(StockMergeUtil.toValuations(listOf(valuation("2330")))["9999"])
     }
 }

@@ -1,5 +1,8 @@
 package com.cathysec.stock.info.data
 
+import com.cathysec.stock.info.data.response.StockDayAverageResponse
+import com.cathysec.stock.info.data.response.StockDayResponse
+import com.cathysec.stock.info.data.response.StockValuationResponse
 import com.squareup.moshi.JsonDataException
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient

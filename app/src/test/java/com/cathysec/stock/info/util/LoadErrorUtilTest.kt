@@ -2,6 +2,8 @@ package com.cathysec.stock.info.util
 
 import com.cathysec.stock.info.model.LoadError
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -71,6 +73,39 @@ class LoadErrorUtilTest {
         first.initCause(second)
 
         assertEquals(LoadError.GENERIC, LoadErrorUtil.classify(first))
+    }
+
+    // ---- messageRes ----
+
+    @Test
+    fun `messageRes returns a different message for every error kind`() {
+        val ids = LoadError.entries.map { LoadErrorUtil.messageRes(it) }
+
+        assertTrue(ids.all { it != 0 })
+        assertEquals(ids.size, ids.toSet().size)
+    }
+
+    @Test
+    fun `messageRes uses the dedicated message for each kind`() {
+        assertNotEquals(
+            LoadErrorUtil.messageRes(LoadError.NO_CONNECTION),
+            LoadErrorUtil.messageRes(LoadError.GENERIC),
+        )
+    }
+
+    @Test
+    fun `refreshFailedMessageRes returns a different message for every error kind`() {
+        val ids = LoadError.entries.map { LoadErrorUtil.refreshFailedMessageRes(it) }
+
+        assertTrue(ids.all { it != 0 })
+        assertEquals(ids.size, ids.toSet().size)
+    }
+
+    @Test
+    fun `refreshFailedMessageRes differs from the full screen error message`() {
+        LoadError.entries.forEach {
+            assertNotEquals(LoadErrorUtil.messageRes(it), LoadErrorUtil.refreshFailedMessageRes(it))
+        }
     }
 
     // ---- out of bound ----

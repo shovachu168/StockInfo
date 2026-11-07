@@ -161,4 +161,46 @@ class StockFormatUtilTest {
     fun `formatCount handles Long MIN_VALUE`() {
         assertEquals("-9,223,372,036,854,775,808", StockFormatUtil.formatCount(Long.MIN_VALUE))
     }
+
+    // ---- ratio and yield ----
+
+    @Test
+    fun `formatRatio formats a normal ratio with two decimals`() {
+        assertEquals("26.20", StockFormatUtil.formatRatio(BigDecimal("26.2")))
+    }
+
+    @Test
+    fun `formatYield appends a percent sign`() {
+        assertEquals("3.12%", StockFormatUtil.formatYield(BigDecimal("3.12")))
+    }
+
+    @Test
+    fun `formatRatio and formatYield return placeholder for null`() {
+        assertEquals("-", StockFormatUtil.formatRatio(null))
+        assertEquals("-", StockFormatUtil.formatYield(null))
+    }
+
+    @Test
+    fun `formatRatio and formatYield handle zero`() {
+        assertEquals("0.00", StockFormatUtil.formatRatio(BigDecimal.ZERO))
+        assertEquals("0.00%", StockFormatUtil.formatYield(BigDecimal.ZERO))
+    }
+
+    @Test
+    fun `formatRatio truncates the 0_005 boundary and extra decimals`() {
+        assertEquals("0.00", StockFormatUtil.formatRatio(BigDecimal("0.005")))
+        assertEquals("1.99%", StockFormatUtil.formatYield(BigDecimal("1.999999")))
+    }
+
+    @Test
+    fun `formatRatio handles very large values`() {
+        assertEquals("1,000,000,000,000.00", StockFormatUtil.formatRatio(BigDecimal("1000000000000")))
+    }
+
+    // Out of bound: a negative ratio (e.g. a negative P/B from the API) keeps its sign
+
+    @Test
+    fun `formatRatio keeps minus sign for negative values`() {
+        assertEquals("-3.50", StockFormatUtil.formatRatio(BigDecimal("-3.5")))
+    }
 }

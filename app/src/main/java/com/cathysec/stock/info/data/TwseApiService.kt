@@ -1,5 +1,8 @@
 package com.cathysec.stock.info.data
 
+import com.cathysec.stock.info.data.response.StockDayAverageResponse
+import com.cathysec.stock.info.data.response.StockDayResponse
+import com.cathysec.stock.info.data.response.StockValuationResponse
 import com.squareup.moshi.Moshi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

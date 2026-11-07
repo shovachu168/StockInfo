@@ -16,6 +16,11 @@
     <dimen name="sort_option_min_height">56dp</dimen>
     <dimen name="sort_option_label_gap">16dp</dimen>
 
+    <!-- Valuation dialog -->
+    <dimen name="valuation_row_spacing">8dp</dimen>
+    <dimen name="valuation_loading_gap">16dp</dimen>
+    <dimen name="valuation_progress_size">24dp</dimen>
+
     <!-- Stock card -->
     <dimen name="stock_card_height">224dp</dimen>
     <dimen name="stock_card_margin_horizontal">4dp</dimen>

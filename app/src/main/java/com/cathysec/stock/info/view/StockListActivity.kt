@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -16,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.databinding.ActivityStockListBinding
-import com.cathysec.stock.info.model.LoadError
+import com.cathysec.stock.info.util.LoadErrorUtil
 import com.cathysec.stock.info.viewmodel.StockListUiState
 import com.cathysec.stock.info.viewmodel.StockListViewModel
 import com.google.android.material.color.MaterialColors
@@ -28,7 +27,7 @@ class StockListActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStockListBinding
     private val viewModel: StockListViewModel by viewModel()
-    private val stockAdapter = StockAdapter()
+    private val stockAdapter = StockAdapter { viewModel.onStockClicked(it.code, it.name) }
 
     // The enter animation only plays when the list appears, not on every refresh.
     private var isListShown = false
@@ -46,6 +45,7 @@ class StockListActivity : AppCompatActivity() {
         setupStockList()
         setupStateViews()
         setupSortSheet()
+        setupValuationDialog()
         observeViewModel()
     }
 
@@ -99,13 +99,28 @@ class StockListActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupValuationDialog() {
+        binding.composeValuationDialog.setContent {
+            StockTheme {
+                val state by viewModel.valuationDialog.collectAsStateWithLifecycle()
+                state?.let {
+                    StockValuationDialog(
+                        state = it,
+                        onRetry = viewModel::onValuationRetry,
+                        onDismiss = viewModel::onValuationDialogDismissed,
+                    )
+                }
+            }
+        }
+    }
+
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.uiState.collect(::render) }
                 launch {
                     viewModel.refreshErrors.collect { error ->
-                        Snackbar.make(binding.root, error.refreshFailedMessage(), Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(binding.root, LoadErrorUtil.refreshFailedMessageRes(error), Snackbar.LENGTH_LONG).show()
                     }
                 }
             }
@@ -131,25 +146,11 @@ class StockListActivity : AppCompatActivity() {
             }
             is StockListUiState.Error -> {
                 isListShown = false
-                binding.tvErrorMessage.setText(state.error.errorMessage())
+                binding.tvErrorMessage.setText(LoadErrorUtil.messageRes(state.error))
             }
             StockListUiState.Loading -> isListShown = false
         }
     }
 
     private fun visibleIf(condition: Boolean) = if (condition) View.VISIBLE else View.GONE
-
-    @StringRes
-    private fun LoadError.errorMessage() = when (this) {
-        LoadError.NO_CONNECTION -> R.string.error_no_connection
-        LoadError.TIMEOUT -> R.string.error_timeout
-        LoadError.GENERIC -> R.string.error_generic
-    }
-
-    @StringRes
-    private fun LoadError.refreshFailedMessage() = when (this) {
-        LoadError.NO_CONNECTION -> R.string.refresh_failed_no_connection
-        LoadError.TIMEOUT -> R.string.refresh_failed_timeout
-        LoadError.GENERIC -> R.string.refresh_failed_generic
-    }
 }

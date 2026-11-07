@@ -17,6 +17,13 @@
     <string name="refresh_failed_timeout">更新失敗，連線逾時</string>
     <string name="refresh_failed_generic">更新失敗，已保留先前的資料</string>
 
+    <!-- 估值對話框 -->
+    <string name="valuation_loading">正在抓取資料中</string>
+    <string name="valuation_no_data">找不到對應資料</string>
+    <string name="label_pe_ratio">本益比</string>
+    <string name="label_dividend_yield">殖利率</string>
+    <string name="label_pb_ratio">股價淨值比</string>
+
     <!-- 股票卡片 -->
     <string name="label_opening_price">開盤價</string>
     <string name="label_closing_price">收盤價</string>

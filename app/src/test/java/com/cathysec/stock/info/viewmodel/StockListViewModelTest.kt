@@ -6,12 +6,16 @@ import com.cathysec.stock.info.model.LoadError
 import com.cathysec.stock.info.model.PriceTrend
 import com.cathysec.stock.info.model.SortOrder
 import com.cathysec.stock.info.model.Stock
+import com.cathysec.stock.info.model.StockValuation
+import com.cathysec.stock.info.model.ValuationsState
 import com.cathysec.stock.info.testing.MainDispatcherRule
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
@@ -414,6 +418,176 @@ class StockListViewModelTest {
         }
     }
 
+    // ---- valuation dialog ----
+
+    private val tsmcValuation = StockValuation(
+        code = "2330",
+        peRatio = BigDecimal("26.20"),
+        dividendYield = BigDecimal("1.50"),
+        pbRatio = BigDecimal("6.10"),
+    )
+
+    @Test
+    fun `loads valuations once at startup`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        StockListViewModel(repository)
+
+        advanceUntilIdle()
+
+        assertEquals(1, repository.loadValuationsCount)
+    }
+
+    @Test
+    fun `dialog is closed until a stock is clicked`() = runTest {
+        val viewModel = StockListViewModel(FakeRepository(Result.success(listOf(stock))))
+        advanceUntilIdle()
+
+        assertNull(viewModel.valuationDialog.value)
+    }
+
+    @Test
+    fun `click shows formatted valuations when loaded`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        repository.valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+
+        assertEquals(
+            ValuationDialogUiState.Loaded("2330", "TSMC", "26.20", "1.50%", "6.10"),
+            viewModel.valuationDialog.value,
+        )
+    }
+
+    @Test
+    fun `click shows placeholders for missing figures`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        repository.valuations.value = ValuationsState.Loaded(
+            mapOf("2330" to StockValuation("2330", peRatio = null, dividendYield = null, pbRatio = BigDecimal.ZERO)),
+        )
+        val viewModel = StockListViewModel(repository)
+
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+
+        assertEquals(
+            ValuationDialogUiState.Loaded("2330", "TSMC", "-", "-", "0.00"),
+            viewModel.valuationDialog.value,
+        )
+    }
+
+    @Test
+    fun `click shows no data when the code is not in the valuations`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        repository.valuations.value = ValuationsState.Loaded(emptyMap())
+        val viewModel = StockListViewModel(repository)
+
+        viewModel.onStockClicked("9999", "Unknown")
+        advanceUntilIdle()
+
+        assertEquals(ValuationDialogUiState.NoData("9999", "Unknown"), viewModel.valuationDialog.value)
+    }
+
+    @Test
+    fun `click while loading shows loading and switches to the result by itself`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+        assertEquals(ValuationDialogUiState.Loading("2330", "TSMC"), viewModel.valuationDialog.value)
+
+        repository.valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
+        advanceUntilIdle()
+        assertEquals(
+            ValuationDialogUiState.Loaded("2330", "TSMC", "26.20", "1.50%", "6.10"),
+            viewModel.valuationDialog.value,
+        )
+    }
+
+    @Test
+    fun `click while loading switches to failed when the request fails`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+
+        repository.valuations.value = ValuationsState.Failed(LoadError.TIMEOUT)
+        advanceUntilIdle()
+
+        assertEquals(
+            ValuationDialogUiState.Failed("2330", "TSMC", LoadError.TIMEOUT),
+            viewModel.valuationDialog.value,
+        )
+    }
+
+    @Test
+    fun `retry requests valuations again and the dialog goes back to loading then loaded`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        repository.valuations.value = ValuationsState.Failed(LoadError.NO_CONNECTION)
+        val viewModel = StockListViewModel(repository)
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+        assertEquals(
+            ValuationDialogUiState.Failed("2330", "TSMC", LoadError.NO_CONNECTION),
+            viewModel.valuationDialog.value,
+        )
+
+        repository.onLoadValuations = {
+            valuations.value = ValuationsState.Loading
+            valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
+        }
+        viewModel.onValuationRetry()
+        advanceUntilIdle()
+
+        assertEquals(2, repository.loadValuationsCount)
+        assertEquals(
+            ValuationDialogUiState.Loaded("2330", "TSMC", "26.20", "1.50%", "6.10"),
+            viewModel.valuationDialog.value,
+        )
+    }
+
+    @Test
+    fun `dismiss closes the dialog and later results do not reopen it`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        val viewModel = StockListViewModel(repository)
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+
+        viewModel.onValuationDialogDismissed()
+        repository.valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
+        advanceUntilIdle()
+
+        assertNull(viewModel.valuationDialog.value)
+    }
+
+    @Test
+    fun `list state is not affected when valuations fail`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        repository.valuations.value = ValuationsState.Failed(LoadError.GENERIC)
+        val viewModel = StockListViewModel(repository)
+        advanceUntilIdle()
+
+        assertEquals(1, (viewModel.uiState.value as StockListUiState.Success).stocks.size)
+    }
+
+    @Test
+    fun `clicking another stock replaces the dialog content`() = runTest {
+        val repository = FakeRepository(Result.success(listOf(stock)))
+        repository.valuations.value = ValuationsState.Loaded(mapOf("2330" to tsmcValuation))
+        val viewModel = StockListViewModel(repository)
+
+        viewModel.onStockClicked("2330", "TSMC")
+        advanceUntilIdle()
+        viewModel.onStockClicked("0050", "ETF")
+        advanceUntilIdle()
+
+        assertEquals(ValuationDialogUiState.NoData("0050", "ETF"), viewModel.valuationDialog.value)
+    }
+
     private companion object {
         const val LARGE_LIST_SIZE = 2_000
     }
@@ -424,6 +598,18 @@ class StockListViewModelTest {
 
         /** When set, replaces the result so a test can hold the request open. */
         var onGetStocks: (suspend () -> List<Stock>)? = null
+
+        override val valuations = MutableStateFlow<ValuationsState>(ValuationsState.Loading)
+        var loadValuationsCount = 0
+            private set
+
+        /** Replaces the default (no-op) behavior of [loadValuations]. */
+        var onLoadValuations: (FakeRepository.() -> Unit)? = null
+
+        override suspend fun loadValuations() {
+            loadValuationsCount++
+            onLoadValuations?.invoke(this)
+        }
 
         override suspend fun getStocks(): List<Stock> {
             callCount++
