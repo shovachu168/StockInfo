@@ -1,8 +1,10 @@
 package com.cathysec.stock.info.view
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -13,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.cathysec.stock.info.BuildConfig
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.databinding.ActivityStockListBinding
 import com.cathysec.stock.info.util.LoadErrorUtil
@@ -45,6 +48,7 @@ class StockListActivity : AppCompatActivity() {
         setupStockList()
         setupStateViews()
         setupSortSheet()
+        setupVersionToast()
         setupValuationDialog()
         observeViewModel()
     }
@@ -95,6 +99,23 @@ class StockListActivity : AppCompatActivity() {
                         onDismiss = viewModel::onSortSheetDismissed,
                     )
                 }
+            }
+        }
+    }
+
+    // Tapping the app name three times in a row shows the app version.
+    private fun setupVersionToast() {
+        var tapCount = 0
+        var lastTapTime = 0L
+        binding.toolbar.setOnClickListener {
+            val now = SystemClock.elapsedRealtime()
+            // A slow tap starts a new series.
+            tapCount = if (now - lastTapTime <= VERSION_TAP_INTERVAL_MILLIS) tapCount + 1 else 1
+            lastTapTime = now
+            if (tapCount == VERSION_TAP_COUNT) {
+                tapCount = 0
+                val version = getString(R.string.app_version, BuildConfig.VERSION_NAME)
+                Toast.makeText(this, version, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -153,4 +174,9 @@ class StockListActivity : AppCompatActivity() {
     }
 
     private fun visibleIf(condition: Boolean) = if (condition) View.VISIBLE else View.GONE
+
+    private companion object {
+        const val VERSION_TAP_COUNT = 3
+        const val VERSION_TAP_INTERVAL_MILLIS = 500L
+    }
 }

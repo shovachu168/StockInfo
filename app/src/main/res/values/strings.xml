@@ -2,6 +2,7 @@
     <string name="app_name">StockInfo</string>
     <string name="stock_list_title">上市個股日成交資訊</string>
     <string name="action_sort">排序</string>
+    <string name="app_version">版本 %1$s</string>
 
     <!-- 排序 -->
     <string name="sort_title">排序方式</string>
