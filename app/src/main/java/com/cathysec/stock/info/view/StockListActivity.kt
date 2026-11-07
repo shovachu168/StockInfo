@@ -18,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.cathysec.stock.info.BuildConfig
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.databinding.ActivityStockListBinding
+import com.cathysec.stock.info.theme.StockTheme
 import com.cathysec.stock.info.util.LoadErrorUtil
 import com.cathysec.stock.info.viewmodel.StockListUiState
 import com.cathysec.stock.info.viewmodel.StockListViewModel

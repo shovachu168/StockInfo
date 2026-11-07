@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.model.LoadError
+import com.cathysec.stock.info.theme.StockTheme
 import com.cathysec.stock.info.util.LoadErrorUtil
 import com.cathysec.stock.info.viewmodel.ValuationDialogUiState
 

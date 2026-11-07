@@ -2,5 +2,10 @@
 <resources>
     <style name="Base.Theme.StockInfo" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/brand_primary</item>
+        <item name="android:colorBackground">@color/dark_background</item>
+        <item name="colorSurface">@color/dark_background</item>
+        <item name="colorOnBackground">@color/dark_text</item>
+        <item name="colorOnSurface">@color/dark_text</item>
+        <item name="colorOnPrimary">@color/dark_text</item>
     </style>
 </resources>

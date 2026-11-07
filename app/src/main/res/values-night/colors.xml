@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brighter red and green so they stay readable on the black background -->
+    <color name="stock_up">#FFEF5350</color>
+    <color name="stock_down">#FF66BB6A</color>
+</resources>

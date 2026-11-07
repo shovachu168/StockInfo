@@ -69,6 +69,7 @@ com.cathysec.stock.info
 │   └── response/  對應 API 回傳格式的 Response 類別
 ├── viewmodel/   ViewModel、UiState、顯示用的 UiModel
 ├── view/        Activity、Adapter、StockFieldView、Compose 元件（SortBottomSheet、StockValuationDialog）
+├── theme/       Compose 主題（StockTheme）
 └── util/        可單元測試的純商業邏輯（Parse、Merge、Format、Sort、PriceTrend、LoadError）
 ```
 

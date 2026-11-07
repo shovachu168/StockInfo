@@ -1,4 +1,4 @@
-package com.cathysec.stock.info.view
+package com.cathysec.stock.info.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +16,14 @@ import com.cathysec.stock.info.R
 fun StockTheme(content: @Composable () -> Unit) {
     val primary = colorResource(R.color.brand_primary)
     val colorScheme = if (isSystemInDarkTheme()) {
-        darkColorScheme(primary = primary)
+        darkColorScheme(
+            primary = primary,
+            onPrimary = colorResource(R.color.dark_text),
+            background = colorResource(R.color.dark_background),
+            surface = colorResource(R.color.dark_background),
+            onBackground = colorResource(R.color.dark_text),
+            onSurface = colorResource(R.color.dark_text),
+        )
     } else {
         lightColorScheme(primary = primary)
     }

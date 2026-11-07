@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.model.SortOrder
+import com.cathysec.stock.info.theme.StockTheme
 import kotlinx.coroutines.launch
 
 /**
