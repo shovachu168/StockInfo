@@ -113,9 +113,13 @@ class StockListViewModel(
         }
     }
 
-    /** Opens the sort sheet. Ignored while there is no list to sort (loading or error). */
+    /**
+     * Opens the sort sheet. Ignored while there is no list to sort (loading or error), and while a
+     * refresh is running because the list is about to be replaced. An order picked during a refresh
+     * is still honoured by [fetchStocks] as a safeguard.
+     */
     fun onSortClicked() {
-        if (_uiState.value !is StockListUiState.Success) return
+        if (!_uiState.value.canSort) return
         _isSortSheetVisible.value = true
     }
 

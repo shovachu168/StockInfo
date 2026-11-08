@@ -188,8 +188,7 @@ class StockListActivity : AppCompatActivity() {
 
     private fun render(state: StockListUiState) {
         if (state !is StockListUiState.Success) binding.fabToTop.hide()
-        // Sorting needs a list, so the sort icon is only shown when the list is shown.
-        binding.toolbar.menu.findItem(R.id.action_sort)?.isVisible = state is StockListUiState.Success
+        renderSortIcon(state)
         binding.progress.visibility = visibleIf(state is StockListUiState.Loading)
         binding.swipeRefresh.visibility = visibleIf(state is StockListUiState.Success)
         binding.errorView.visibility = visibleIf(state is StockListUiState.Error)
@@ -212,6 +211,20 @@ class StockListActivity : AppCompatActivity() {
             }
             StockListUiState.Loading -> isListShown = false
         }
+    }
+
+    /**
+     * Sorting needs a list, so the icon is only shown when the list is shown. During a pull-to-refresh
+     * it stays visible but disabled. The icon tint (the disabled state of colorControlNormal) already
+     * dims a disabled icon, so do not change its alpha by hand or it gets dimmed twice. This relies on
+     * the default Widget.Material3.Toolbar, which keeps colorControlNormal as textColorSecondary (a
+     * selector with a 38% disabled state). Styles such as Toolbar.Surface or Toolbar.OnSurface set it
+     * to a single color, so a disabled icon would no longer dim and would need separate handling.
+     */
+    private fun renderSortIcon(state: StockListUiState) {
+        val item = binding.toolbar.menu.findItem(R.id.action_sort) ?: return
+        item.isVisible = state is StockListUiState.Success
+        item.isEnabled = state.canSort
     }
 
     private fun visibleIf(condition: Boolean) = if (condition) View.VISIBLE else View.GONE
