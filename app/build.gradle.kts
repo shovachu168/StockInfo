@@ -17,6 +17,12 @@ android {
     }
 
     buildTypes {
+        // Debug build: distinct package and version so it can be installed alongside release.
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
+        // Release build: production package and version name.
         release {
             isMinifyEnabled = false
             proguardFiles(
