@@ -3,13 +3,17 @@ package com.cathysec.stock.info.view
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,6 +22,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.cathysec.stock.info.BuildConfig
 import com.cathysec.stock.info.R
 import com.cathysec.stock.info.databinding.ActivityStockListBinding
+import com.cathysec.stock.info.theme.StockTheme
 import com.cathysec.stock.info.util.LoadErrorUtil
 import com.cathysec.stock.info.viewmodel.StockListUiState
 import com.cathysec.stock.info.viewmodel.StockListViewModel
@@ -47,6 +52,7 @@ class StockListActivity : AppCompatActivity() {
         setupWindowInsets()
         setupStockList()
         setupStateViews()
+        setupToTopButton()
         setupSortSheet()
         setupVersionToast()
         setupValuationDialog()
@@ -66,6 +72,38 @@ class StockListActivity : AppCompatActivity() {
                 bottom = basePaddingBottom + systemBars.bottom,
             )
             insets
+        }
+    }
+
+    // The button appears once the first card has scrolled out of view and scrolls the list back to the top.
+    private fun setupToTopButton() {
+        val fab = binding.fabToTop
+        val baseMarginRight = (fab.layoutParams as ViewGroup.MarginLayoutParams).rightMargin
+        val baseMarginBottom = (fab.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        ViewCompat.setOnApplyWindowInsetsListener(fab) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                rightMargin = baseMarginRight + systemBars.right
+                bottomMargin = baseMarginBottom + systemBars.bottom
+            }
+            insets
+        }
+        binding.rvStocks.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                if (layoutManager.findFirstVisibleItemPosition() > 0) fab.show() else fab.hide()
+            }
+        })
+        fab.setOnClickListener {
+            val list = binding.rvStocks
+            // Far away items would take very long to scroll through, so jump close to the top first.
+            val layoutManager = list.layoutManager as LinearLayoutManager
+            if (layoutManager.findFirstVisibleItemPosition() > SMOOTH_SCROLL_MAX_POSITION) {
+                list.scrollToPosition(SMOOTH_SCROLL_MAX_POSITION)
+            }
+            list.smoothScrollToPosition(0)
+            // Bring the collapsed title bar back together with the list.
+            binding.appBar.setExpanded(true, true)
         }
     }
 
@@ -149,8 +187,8 @@ class StockListActivity : AppCompatActivity() {
     }
 
     private fun render(state: StockListUiState) {
-        // Sorting needs a list, so the sort icon is only shown when the list is shown.
-        binding.toolbar.menu.findItem(R.id.action_sort)?.isVisible = state is StockListUiState.Success
+        if (state !is StockListUiState.Success) binding.fabToTop.hide()
+        renderSortIcon(state)
         binding.progress.visibility = visibleIf(state is StockListUiState.Loading)
         binding.swipeRefresh.visibility = visibleIf(state is StockListUiState.Success)
         binding.errorView.visibility = visibleIf(state is StockListUiState.Error)
@@ -175,10 +213,25 @@ class StockListActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Sorting needs a list, so the icon is only shown when the list is shown. During a pull-to-refresh
+     * it stays visible but disabled. The icon tint (the disabled state of colorControlNormal) already
+     * dims a disabled icon, so do not change its alpha by hand or it gets dimmed twice. This relies on
+     * the default Widget.Material3.Toolbar, which keeps colorControlNormal as textColorSecondary (a
+     * selector with a 38% disabled state). Styles such as Toolbar.Surface or Toolbar.OnSurface set it
+     * to a single color, so a disabled icon would no longer dim and would need separate handling.
+     */
+    private fun renderSortIcon(state: StockListUiState) {
+        val item = binding.toolbar.menu.findItem(R.id.action_sort) ?: return
+        item.isVisible = state is StockListUiState.Success
+        item.isEnabled = state.canSort
+    }
+
     private fun visibleIf(condition: Boolean) = if (condition) View.VISIBLE else View.GONE
 
     private companion object {
         const val VERSION_TAP_COUNT = 3
         const val VERSION_TAP_INTERVAL_MILLIS = 500L
+        const val SMOOTH_SCROLL_MAX_POSITION = 10
     }
 }

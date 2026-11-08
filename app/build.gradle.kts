@@ -12,11 +12,17 @@ android {
         applicationId = "com.cathysec.stock.info"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
     }
 
     buildTypes {
+        // Debug build: distinct package and version so it can be installed alongside release.
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
+        // Release build: production package and version name.
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -47,7 +53,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.ktx)
-    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.recyclerview)
@@ -60,8 +65,6 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
@@ -76,7 +79,6 @@ dependencies {
     // DI
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -89,5 +91,4 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(platform(libs.koin.bom))
     testImplementation(libs.koin.test)
-    testImplementation(libs.koin.test.junit4)
 }

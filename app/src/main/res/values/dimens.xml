@@ -4,6 +4,9 @@
     <!-- Stock list: list padding + card margin = 16dp screen edge, 8dp between cards -->
     <dimen name="stock_list_padding">12dp</dimen>
 
+    <!-- Scroll to top button -->
+    <dimen name="to_top_margin">16dp</dimen>
+
     <!-- Error state -->
     <dimen name="state_padding">32dp</dimen>
     <dimen name="state_icon_size">64dp</dimen>

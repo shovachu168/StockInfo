@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug builds only: overrides the launcher label to tell debug and release apart. -->
+    <string name="app_name">StockInfo Debug</string>
+</resources>

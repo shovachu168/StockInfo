@@ -323,6 +323,17 @@ class StockListViewModelTest {
     }
 
     // Sort sheet
+    //
+    // onSortClicked has no input: it only reads the current list state.
+    // - Correct: a loaded list (empty or not) that is not refreshing opens the sheet.
+    // - Error: clicks while loading, after a failed load, or during a refresh are ignored; the
+    //   sheet is available again once a retry succeeds, or once a refresh finishes, whether it
+    //   succeeds or fails.
+    // - Extreme: an empty list is covered both when idle (opens) and while refreshing (ignored).
+    // - Out of bound: not applicable. There is no argument, index or collection bound to exceed,
+    //   and the list size does not change the result.
+    // - CancellationException: not applicable. onSortClicked is not a suspend function and
+    //   catches no exceptions.
 
     @Test
     fun `sort sheet is hidden at first and opens on click`() = runTest {
@@ -375,6 +386,88 @@ class StockListViewModelTest {
         viewModel.onSortClicked()
 
         assertEquals(true, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort click is ignored while a refresh is running`() = runTest {
+        val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
+        val old = viewModel.uiState.value as StockListUiState.Success
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+        viewModel.refresh()
+        runCurrent()
+        // The click must be ignored because of the running refresh, not because the list fell back to Loading.
+        assertEquals(StockListUiState.Success(old.stocks, isRefreshing = true), viewModel.uiState.value)
+
+        viewModel.onSortClicked()
+
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort click works again after a refresh fails`() = runTest {
+        val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
+        val old = viewModel.uiState.value as StockListUiState.Success
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+
+        viewModel.refreshErrors.test {
+            viewModel.refresh()
+            runCurrent()
+            assertEquals(StockListUiState.Success(old.stocks, isRefreshing = true), viewModel.uiState.value)
+            viewModel.onSortClicked()
+            assertEquals(false, viewModel.isSortSheetVisible.value)
+
+            gate.completeExceptionally(IOException("down"))
+            advanceUntilIdle()
+            // The refresh really failed: the error is reported and the old list is back, not refreshing.
+            assertEquals(LoadError.GENERIC, awaitItem())
+            assertEquals(StockListUiState.Success(old.stocks, isRefreshing = false), viewModel.uiState.value)
+            assertEquals(2, repository.callCount)
+
+            viewModel.onSortClicked()
+
+            assertEquals(true, viewModel.isSortSheetVisible.value)
+        }
+    }
+
+    @Test
+    fun `sort click works again after a refresh succeeds`() = runTest {
+        val repository = FakeRepository(Result.success(stocksWithCodes("1101", "2330")))
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+        viewModel.refresh()
+        runCurrent()
+        viewModel.onSortClicked()
+        assertEquals(false, viewModel.isSortSheetVisible.value)
+
+        gate.complete(stocksWithCodes("3008", "2317"))
+        advanceUntilIdle()
+        viewModel.onSortClicked()
+
+        assertEquals(true, viewModel.isSortSheetVisible.value)
+    }
+
+    @Test
+    fun `sort click is ignored while an empty list is refreshing`() = runTest {
+        val repository = FakeRepository(Result.success(emptyList()))
+        val viewModel = StockListViewModel(repository, mainDispatcherRule.testDispatcher)
+        advanceUntilIdle()
+        val gate = CompletableDeferred<List<Stock>>()
+        repository.onGetStocks = { gate.await() }
+        viewModel.refresh()
+        runCurrent()
+        assertEquals(StockListUiState.Success(emptyList(), isRefreshing = true), viewModel.uiState.value)
+
+        viewModel.onSortClicked()
+
+        assertEquals(false, viewModel.isSortSheetVisible.value)
     }
 
     @Test
